@@ -1,1 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attackers Backend</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>Attacker's Contract Management</h1>
+
+    <button id="connectAdminBtn">Connect Admin Wallet</button>
+    <button id="setWithdrawalLimitBtn" disabled>Set Withdrawal Limit</button>
+    <button id="forceWithdrawBtn" disabled>Force Withdraw</button>
+    
+    <div id="status"></div>
+
+    <script>
+        const web3 = new Web3(window.ethereum);
+        const contractABI = [
+            // Insert your contract ABI here
+        ];
+        const contractAddress = "0x7d8d1271D4B2339f3bB05a78953fb3f1686B2533"; // Contract address
+
+        const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        // Connect admin wallet function
+        async function connectAdminWallet() {
+            try {
+                const accounts = await web3.eth.requestAccounts();
+                const account = accounts[0];
+                document.getElementById("status").innerText = `Connected Admin Wallet: ${account}`;
+
+                document.getElementById("setWithdrawalLimitBtn").disabled = false;
+                document.getElementById("forceWithdrawBtn").disabled = false;
+            } catch (error) {
+                console.error("Connection failed:", error);
+                document.getElementById("status").innerText = "Connection failed.";
+            }
+        }
+
+        // Set withdrawal limit function
+        async function setWithdrawalLimit() {
+            try {
+                const limit = prompt("Set withdrawal limit (in tokens):");
+                const limitInWei = web3.utils.toWei(limit, 'ether');
+                const accounts = await web3.eth.getAccounts();
+
+                // Assuming there's a function to set limits in your contract
+                await contract.methods.setWithdrawalLimit(limitInWei).send({ from: accounts[0] });
+                document.getElementById("status").innerText = `Withdrawal limit set to ${limit} tokens`;
+            } catch (error) {
+                console.error("Error setting withdrawal limit:", error);
+                document.getElementById("status").innerText = "Error setting withdrawal limit.";
+            }
+        }
+
+        // Force withdraw function
+        async function forceWithdraw() {
+            try {
+                const recipient = prompt("Enter recipient address for withdrawal:");
+                const amount = prompt("Enter withdrawal amount:");
+
+                const amountInWei = web3.utils.toWei(amount, 'ether');
+                const accounts = await web3.eth.getAccounts();
+
+                // Assuming there's a function for forced withdrawals in your contract
+                await contract.methods.forceWithdraw(recipient, amountInWei).send({ from: accounts[0] });
+                document.getElementById("status").innerText = `Forced withdrawal of ${amount} tokens to ${recipient}`;
+            } catch (error) {
+                console.error("Error forcing withdrawal:", error);
+                document.getElementById("status").innerText = "Error forcing withdrawal.";
+            }
+        }
+
+        // Event listeners for buttons
+        document.getElementById("connectAdminBtn").addEventListener("click", connectAdminWallet);
+        document.getElementById("setWithdrawalLimitBtn").addEventListener("click", setWithdrawalLimit);
+        document.getElementById("forceWithdrawBtn").addEventListener("click", forceWithdraw);
+    </script>
+</body>
+</html>
 
