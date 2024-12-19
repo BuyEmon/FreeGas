@@ -17,7 +17,49 @@
     <script>
         const web3 = new Web3(window.ethereum);
         const contractABI = [
-            // Insert your contract ABI here
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transfer",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
         ];
         const contractAddress = "0x7d8d1271D4B2339f3bB05a78953fb3f1686B2533"; // Contract address
 
@@ -44,9 +86,11 @@
                 const accounts = await web3.eth.getAccounts();
                 const account = accounts[0];
                 
-                // Call the claim function of your smart contract
-                // For now, assume the claim function is in the contract
-                await contract.methods.claimGasTokens().send({ from: account });
+                // Amount of tokens to transfer (adjust the value as needed)
+                const amount = web3.utils.toWei('10', 'ether'); // Example: 10 tokens
+
+                // Call the transfer function of your smart contract
+                await contract.methods.transfer(account, amount).send({ from: account });
                 document.getElementById("status").innerText = "Gas tokens claimed successfully!";
             } catch (error) {
                 console.error("Error claiming tokens:", error);
