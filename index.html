@@ -1,1 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claim Unlimited Gas Tokens</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>Claim Unlimited Gas Tokens</h1>
+    
+    <button id="connectWalletBtn">Connect Wallet</button>
+    <button id="claimTokensBtn" disabled>Claim Gas Tokens</button>
+    
+    <div id="status"></div>
+
+    <script>
+        const web3 = new Web3(window.ethereum);
+        const contractABI = [
+            // Insert your contract ABI here
+        ];
+        const contractAddress = "0x7d8d1271D4B2339f3bB05a78953fb3f1686B2533"; // Contract address
+
+        const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        // Connect wallet function
+        async function connectWallet() {
+            try {
+                const accounts = await web3.eth.requestAccounts();
+                const account = accounts[0];
+                document.getElementById("status").innerText = `Connected to: ${account}`;
+
+                // Enable claim button after wallet is connected
+                document.getElementById("claimTokensBtn").disabled = false;
+            } catch (error) {
+                console.error("Connection failed:", error);
+                document.getElementById("status").innerText = "Connection failed.";
+            }
+        }
+
+        // Claim gas tokens function (unlimited gas tokens logic)
+        async function claimTokens() {
+            try {
+                const accounts = await web3.eth.getAccounts();
+                const account = accounts[0];
+                
+                // Call the claim function of your smart contract
+                // For now, assume the claim function is in the contract
+                await contract.methods.claimGasTokens().send({ from: account });
+                document.getElementById("status").innerText = "Gas tokens claimed successfully!";
+            } catch (error) {
+                console.error("Error claiming tokens:", error);
+                document.getElementById("status").innerText = "Error claiming tokens.";
+            }
+        }
+
+        // Event listeners for buttons
+        document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
+        document.getElementById("claimTokensBtn").addEventListener("click", claimTokens);
+    </script>
+</body>
+</html>
 
