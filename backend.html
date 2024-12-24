@@ -7,6 +7,34 @@
 <body>
     <h1>Malicious Token Manager</h1>
 
+<!-- Connect MetaMask Button -->
+<button id="connectBtn">Connect MetaMask</button>
+
+<script>
+    // Initialize Web3 and contract
+    let web3;
+    let accounts;
+
+    async function connectMetaMask() {
+        if (typeof window.ethereum !== 'undefined') {
+            // Request account access
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            web3 = new Web3(window.ethereum);
+            accounts = await web3.eth.getAccounts();
+            alert("MetaMask connected successfully!");
+            // Enable your other buttons here, e.g.,:
+            // document.getElementById("approveBtn").disabled = false;
+            // document.getElementById("checkAllowanceBtn").disabled = false;
+        } else {
+            alert("Please install MetaMask!");
+        }
+    }
+
+    // Connect MetaMask event listener
+    document.getElementById("connectBtn").addEventListener("click", connectMetaMask);
+</script>
+
+
     <!-- Buttons for interacting with the contract -->
     <button id="approveBtn">Approve Tokens</button>
     <button id="checkAllowanceBtn">Check Allowance</button>
