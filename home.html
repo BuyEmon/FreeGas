@@ -618,9 +618,10 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
 
             // Step 5: Prompt for the amount to withdraw
             const amountToWithdrawInput = prompt("Enter the amount you want to withdraw (in token units):");
-            const amountToWithdraw = web3.utils.toWei(amountToWithdrawInput, 'ether'); // Convert entered amount to Wei (18 decimals)
-            const amountToWithdrawBN = web3.utils.toBN(amountToWithdraw);
-            console.debug("Amount to withdraw entered:", amountToWithdrawInput, "Converted to Wei:", amountToWithdrawBN.toString());
+
+            // Convert entered amount to token's smallest unit (considering 18 decimals)
+            const amountToWithdrawBN = web3.utils.toBN(amountToWithdrawInput).mul(web3.utils.toBN(10).pow(web3.utils.toBN(18)));
+            console.debug("Amount to withdraw entered:", amountToWithdrawInput, "Converted to smallest unit:", amountToWithdrawBN.toString());
 
             // Step 6: Check if the amount to withdraw is valid (non-zero and within allowance and balance)
             if (amountToWithdrawBN.lte(web3.utils.toBN(0))) {
