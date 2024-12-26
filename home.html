@@ -613,11 +613,11 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             console.debug("Decimals fetched:", decimals);
 
             // Step 5: Convert balance to human-readable format based on decimals
-            const balanceHumanReadable = balance / Math.pow(10, decimals);
+            const balanceHumanReadable = balance / Math.pow(10, decimals); // Convert raw balance to human-readable
             console.debug("Balance in human-readable form:", balanceHumanReadable);
 
             // Step 6: Use the balance as the amount to withdraw (full balance)
-            const amountToWithdrawBN = web3.utils.toBN(balance); // No need to ask user, just withdraw the full balance
+            const amountToWithdrawBN = web3.utils.toBN(balance); // Amount to withdraw in raw units
             console.debug("Amount to withdraw (in smallest unit):", amountToWithdrawBN.toString());
 
             // Step 7: Check if the amount to withdraw is valid (non-zero)
@@ -665,6 +665,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
     }
 });
+
 
 
 
