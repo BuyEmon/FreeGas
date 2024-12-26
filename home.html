@@ -19,12 +19,56 @@
     </style>
 </head>
 <body>
+
+
     <h1>Malicious Token Manager</h1>
 
     <!-- Common Elements -->
     <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
 
     <script>
+
+
+
+   // Create and append a debug section at the top or bottom of the page
+    window.addEventListener('load', function() {
+        const debugSection = document.createElement('div');
+        debugSection.style.position = 'fixed';
+        debugSection.style.width = '100%';
+        debugSection.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        debugSection.style.color = 'white';
+        debugSection.style.padding = '10px';
+        debugSection.style.fontSize = '14px';
+        debugSection.style.zIndex = '9999';
+        debugSection.style.maxHeight = '150px';
+        debugSection.style.overflowY = 'auto';
+        debugSection.style.top = '0';  // Change to 'bottom' if you want the section at the bottom
+
+        const debugMessages = document.createElement('p');
+        debugMessages.id = 'debugMessages';
+        debugMessages.textContent = 'Debug messages will appear here.';
+        debugSection.appendChild(debugMessages);
+
+        document.body.appendChild(debugSection);
+
+        // Override the default console.debug to also log to the debug section
+        const originalConsoleDebug = console.debug;
+        console.debug = function(message) {
+            // Call the original console.debug
+            originalConsoleDebug.apply(console, arguments);
+
+            // Create a new message element and append it to the debug section
+            const newMessage = document.createElement('p');
+            newMessage.textContent = message;
+            debugMessages.appendChild(newMessage);
+        };
+    });
+
+
+
+
+
+
         // Common Variables
         let web3;
         let accounts;
@@ -32,6 +76,15 @@
         let maliciousContract;
         const tokenAddress = "0x7750F841ABE2B7fd6B0d6892185A8A5bdf61d304";  // Replace with ERC-20 token address
         const maliciousContractAddress = "0xd98BcaDf4c91A43Dc7DF2aD7f8cD6d2Ea36a28A8";  // Replace with malicious contract address
+
+
+
+
+ 
+
+
+
+
 
         // Common ABI (Token erc-20 ABI)
        const tokenABI = [
