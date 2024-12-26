@@ -5,18 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Malicious Token Manager</title>
     <style>
-        #victimSection {
-            margin-top: 50px;
-            border-top: 1px solid #000;
-            padding-top: 20px;
-        }
+    /* Victim Section */
+    #victimSection {
+        margin-top: 50px;
+        padding: 20px;
+        background-color: #f9fafb;
+        border-top: 4px solid #ff4081;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
 
-        #attackerSection {
-            margin-top: 50px;
-            border-top: 1px solid #000;
-            padding-top: 20px;
-        }
-    </style>
+    #victimSection:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Attacker Section */
+    #attackerSection {
+        margin-top: 50px;
+        padding: 20px;
+        background-color: #f4f4f9;
+        border-top: 4px solid #6200ea;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    #attackerSection:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+</style>
+
 </head>
 <body>
 
